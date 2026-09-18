@@ -1,1 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BUYWISE — Compare Less. Decide Wise.</title>
 
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f7f5fb;
+  color: #171522;
+}
+
+.container {
+  max-width: 1000px;
+  margin: auto;
+  padding: 30px 22px 70px;
+}
+
+.logo {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+
+.badge {
+  float: right;
+  background: #ebe7ff;
+  color: #6042df;
+  padding: 8px 13px;
+  border-radius: 30px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.hero {
+  padding: 90px 0 55px;
+  max-width: 760px;
+}
+
+.eyebrow {
+  color: #6d4aff;
+  font-size: 13px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+h1 {
+  font-size: clamp(50px, 8vw, 82px);
+  line-height: .92;
+  letter-spacing: -5px;
+  margin: 15px 0 25px;
+}
+
+.hero p {
+  color: #716c7d;
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+.section-title {
+  font-size: 27px;
+  font-weight: 800;
+  margin-bottom: 18px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.card {
+  background: white;
+  border: 1px solid #e8e4ef;
+  border-radius: 25px;
+  padding: 30px;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 40px rgba(40,25,70,.08);
+}
+
+.icon {
+  font-size: 35px;
+}
+
+.card h2 {
+  font-size: 25px;
+  margin: 15px 0 8px;
+}
+
+.card p {
+  color: #716c7d;
+  line-height: 1.5;
+}
+
+.hidden {
+  display: none;
+}
+
+.back {
+  border: 0;
+  background: none;
+  color: #716c7d;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 15px 0 25px;
+}
+
+.panel {
+  background: white;
+  border: 1px solid #e8e4ef;
+  border-radius: 25px;
+  padding: 30px;
+}
+
+.progress {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 30px;
+}
+
+.progress div {
+  height: 6px;
+  flex: 1;
+  border-radius: 20px;
+  background: #e3e0e9;
+}
+
+.progress .active {
+  background: #6d4aff;
+}
+
+.question {
+  font-size: 35px;
+  letter-spacing: -2px;
+  margin-bottom: 25px;
+}
+
+.options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.option {
+  background: white;
+  border: 1px solid #e3dfeb;
+  border-radius: 16px;
+  padding: 18px;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: left;
+  cursor: pointer;
+}
+
+.option:hover {
+  border-color: #6d4aff;
+  background: #faf9ff;
+}
+
+.fit {
+  font-size: 58px;
+  font-weight: 900;
+  color: #6d4aff;
+}
+
+.fit span {
+  display: block;
+  font-size: 11px;
+  color: #716c7d;
+  letter-spacing: 1px;
+}
+
+.result {
+  margin-top: 25px;
+  border: 1px solid #e8e4ef;
+  border-radius: 20px;
+  padding: 22px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 15px 0;
+}
+
+.tag {
+  background: #f0edf6;
+  padding: 8px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.why {
+  background: #f4f0ff;
+  border-radius: 17px;
+  padding: 18px;
+  line-height: 1.5;
+}
+
+.cta {
+  display: inline-block;
+  margin-top: 15px;
+  background: #6d4aff;
+  color: white;
+  text-decoration: none;
+  padding: 14px 18px;
+  border-radius: 13px;
+  font-weight: bold;
+}
+
+.small {
+  color: #8b8693;
+  font-size: 11px;
+  line-height: 1.5;
+  margin-top: 18px;
+}
+
+@media(max-width:650px) {
+  .cards,
+  .options {
+    grid-template-columns: 1fr;
+  }
+
+  h1 {
+    letter-spacing: -3px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div>
+  <span class="logo">BUYWISE</span>
+  <span class="badge">AU • MVP</span>
+</div>
+
+<div id="landing">
+
+<section class="hero">
+  <div class="eyebrow">A smarter way to buy</div>
+
+  <h1>
+    Compare Less.<br>
+    Decide Wise.
+  </h1>
+
+  <p>
+    Stop opening twenty tabs. Tell BUYWISE what you actually need,
+    and get a buying decision built around you.
+  </p>
+</section>
+
+<div class="section-title">
+  What are you buying?
+</div>
+
+<div class="cards">
+
+<div class="card" onclick="start('home')">
+  <div class="icon">🏠</div>
+  <h2>For Home</h2>
+  <p>
+    Appliances and everyday household purchases.
+  </p>
+</div>
+
+<div class="card" onclick="start('business')">
+  <div class="icon">🏪</div>
+  <h2>For Business</h2>
+  <p>
+    Equipment where workload, durability and value matter.
+  </p>
+</div>
+
+</div>
+
+</div>
+
+
+<div id="app" class="hidden">
+
+<button class="back" onclick="goHome()">
+← BUYWISE
+</button>
+
+<div id="content"></div>
+
+</div>
+
+</div>
+
+
+<script>
+
+const flows = {
+
+home: [
+
+[
+"What are you buying?",
+["Washing machine"]
+],
+
+[
+"What is your budget?",
+[
+"Under $700",
+"$700–$1,000",
+"$1,000–$1,500",
+"$1,500+"
+]
+],
+
+[
+"How will you use it?",
+[
+"Family / frequent washing",
+"Couple / regular washing",
+"Light use"
+]
+],
+
+[
+"What matters most?",
+[
+"Reliability",
+"Low running cost",
+"Capacity",
+"Quiet operation"
+]
+]
+
+],
+
+business: [
+
+[
+"What are you buying?",
+["Commercial blender"]
+],
+
+[
+"What is your budget?",
+[
+"Under $500",
+"$500–$800",
+"$800–$1,200",
+"$1,200+"
+]
+],
+
+[
+"What will it handle?",
+[
+"Frozen fruit / ice",
+"Smoothies / soft ingredients",
+"Light prep"
+]
+],
+
+[
+"What matters most?",
+[
+"Durability",
+"Power / throughput",
+"Easy cleaning",
+"Value"
+]
+]
+
+]
+
+};
+
+
+let mode = "";
+let step = 0;
+let answers = [];
+
+
+function start(selectedMode) {
+
+mode = selectedMode;
+
+step = 0;
+
+answers = [];
+
+document.getElementById("landing").classList.add("hidden");
+
+document.getElementById("app").classList.remove("hidden");
+
+renderQuestion();
+
+}
+
+
+function renderQuestion() {
+
+const flow = flows[mode];
+
+const question = flow[step];
+
+let html = "";
+
+html += '<div class="progress">';
+
+flow.forEach((item,index) => {
+
+html += '<div class="' +
+(index <= step ? "active" : "") +
+'"></div>';
+
+});
+
+html += "</div>";
+
+html += '<div class="panel">';
+
+html += '<div class="eyebrow">Step ' +
+(step + 1) +
+" of " +
+flow.length +
+"</div>";
+
+html += '<h2 class="question">' +
+question[0] +
+"</h2>";
+
+html += '<div class="options">';
+
+question[1].forEach((option,index) => {
+
+html +=
+'<button class="option" onclick="answer(' +
+index +
+')">' +
+option +
+"</button>";
+
+});
+
+html += "</div>";
+
+html += "</div>";
+
+document.getElementById("content").innerHTML = html;
+
+}
+
+
+function answer(index) {
+
+answers[step] = flows[mode][step][1][index];
+
+if(step < flows[mode].length - 1) {
+
+step++;
+
+renderQuestion();
+
+} else {
+
+showDecision();
+
+}
+
+}
+
+
+function showDecision() {
+
+const business = mode === "business";
+
+const noFit =
+business &&
+answers[1] === "$500–$800" &&
+answers[2] === "Frozen fruit / ice";
+
+
+let html = "";
+
+html += '<div class="panel">';
+
+html +=
+'<div class="eyebrow">Your BuyWise Decision</div>';
+
+
+if(noFit) {
+
+html +=
+'<h2 class="question">No strong BuyWise Fit found</h2>';
+
+html +=
+'<div class="result">';
+
+html +=
+'<div class="tags">' +
+'<span class="tag">Evidence: 🟡 Demo</span>' +
+'<span class="tag">Public rating: separate</span>' +
+'<span class="tag">Seller signal: separate</span>' +
+"</div>";
+
+html +=
+'<div class="why">' +
+"<b>Why:</b><br>" +
+"Your requirements call for reliable frozen-ingredient performance, " +
+"but this budget may not match the equipment class that clearly meets " +
+"that workload. BUYWISE would not force a recommendation." +
+"</div>";
+
+html +=
+"<p><b>Next move:</b> Increase the budget or relax a requirement, " +
+"then BUYWISE can reassess.</p>";
+
+} else {
+
+html +=
+'<h2 class="question">' +
+(business
+? "Commercial blender — workload-focused option"
+: "9kg washing machine — value-focused option") +
+"</h2>";
+
+html +=
+'<div class="fit">89' +
+'<span>BUYWISE FIT / 100</span>' +
+"</div>";
+
+html +=
+'<div class="result">';
+
+html +=
+'<div class="tags">' +
+'<span class="tag">Evidence: 🟡 Demo</span>' +
+'<span class="tag">Public rating: separate</span>' +
+'<span class="tag">Seller signal: separate</span>' +
+"</div>";
+
+html +=
+'<div class="why">' +
+"<b>Why this fits:</b><br>" +
+(business
+? "Your answers prioritise durability and real workload performance. " +
+"BUYWISE would check power, capacity, frozen-ingredient suitability, " +
+"service evidence and value."
+: "Your answers point toward a 9kg+ machine balancing capacity, " +
+"running costs and reliability evidence.") +
+"</div>";
+
+html +=
+"<p><b>Watch out:</b> Live price, warranty, reviews and retailer " +
+"availability must be verified before purchase.</p>";
+
+html +=
+'<a class="cta" href="#" onclick="return false">' +
+"Check current price →" +
+"</a>";
+
+}
+
+html +=
+'<div class="small">' +
+"Demo MVP. Product, price, review and retailer data are placeholders. " +
+"In production, BUYWISE will verify current information. " +
+"Affiliate relationships will be disclosed and will not affect " +
+"the BuyWise Fit." +
+"</div>";
+
+html += "</div>";
+
+html +=
+'<button class="back" onclick="start(mode)" style="margin-top:20px">' +
+"↻ Start again" +
+"</button>";
+
+html += "</div>";
+
+document.getElementById("content").innerHTML = html;
+
+}
+
+
+function goHome() {
+
+document.getElementById("app").classList.add("hidden");
+
+document.getElementById("landing").classList.remove("hidden");
+
+window.scrollTo(0,0);
+
+}
+
+</script>
+
+</body>
+</html>
