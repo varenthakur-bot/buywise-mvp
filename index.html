@@ -429,15 +429,21 @@ const businessQuestions=[
     ]
   },
 
-  {
-    title:"What's most important?",
-    text:"Choose your main priority.",
-    options:[
-      ["Reliability","reliability"],
-      ["Durability","durability"],
-      ["Lowest price","price"]
-    ]
-  }
+ {
+  title:"What matters most to you?",
+  text:"Choose up to 3 priorities.",
+  options:[
+    ["Reliability","reliability"],
+    ["Durability","durability"],
+    ["Price / Value","price"],
+    ["Performance","performance"],
+    ["Ease of use","usability"],
+    ["Warranty","warranty"],
+    ["Capacity","capacity"],
+    ["Energy efficiency","efficiency"]
+  ],
+  multi:true
+}
 
 ];
 
@@ -468,6 +474,75 @@ function showBusinessQuestion(){
   const box=document.getElementById("options");
   box.innerHTML="";
 
+  /* Multiple-priority question */
+  if(q.multi){
+
+    let selected=[];
+
+    q.options.forEach(option=>{
+
+      const div=document.createElement("div");
+
+      div.className="option";
+      div.innerText="☐ "+option[0];
+
+      div.onclick=()=>{
+
+        const index=selected.indexOf(option[1]);
+
+        if(index>-1){
+
+          selected.splice(index,1);
+          div.innerText="☐ "+option[0];
+
+        }else{
+
+          if(selected.length>=3){
+            alert("Please choose up to 3 priorities.");
+            return;
+          }
+
+          selected.push(option[1]);
+          div.innerText="☑ "+option[0];
+        }
+
+      };
+
+      box.appendChild(div);
+
+    });
+
+    const continueButton=document.createElement("button");
+
+    continueButton.className="primary";
+    continueButton.innerText="Continue →";
+    continueButton.style.marginTop="10px";
+
+    continueButton.onclick=()=>{
+
+      if(selected.length===0){
+        alert("Please choose at least one priority.");
+        return;
+      }
+
+      answers[step]=selected;
+      step++;
+
+      if(step<businessQuestions.length){
+        showBusinessQuestion();
+      }else{
+        showBusinessResults();
+      }
+
+    };
+
+    box.appendChild(continueButton);
+
+    return;
+  }
+
+  /* Normal single-choice question */
+
   q.options.forEach(option=>{
 
     const div=document.createElement("div");
@@ -493,9 +568,6 @@ function showBusinessQuestion(){
   });
 
 }
-
-
-/* ---------------- BUSINESS RESULTS ---------------- */
 
 function showBusinessResults(){
 
