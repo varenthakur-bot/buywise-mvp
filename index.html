@@ -578,69 +578,263 @@ const usage=answers[1];
 const priorities=answers[3] || [];
 function calculatePriorityScore(product){
 
-  let score = 0;
-  let possible = 0;
+  let totalScore = 0;
+  let supportedCriteria = 0;
   let breakdown = [];
+
   priorities.forEach(priority => {
 
-   if(priority === "price"){
-  possible += 30;
+    // PRICE / VALUE
+    if(priority === "price"){
 
-  if(product.price <= budget){
-    score += 30;
-    breakdown.push("💰 Price / Value: meets your budget");
-  }else{
-    breakdown.push("💰 Price / Value: above your budget");
-  }
-}
+      if(product.price && budget){
 
-   if(priority === "reliability"){
-  possible += 20;
+        supportedCriteria++;
 
-  if(product.warrantyYears && product.warrantyYears >= 2){
-    score += 20;
-    breakdown.push("🛡 Reliability: supported by available warranty evidence");
-  }else{
-    breakdown.push("🛡 Reliability: limited supporting evidence");
-  }
-}
+        if(product.price <= budget){
+          totalScore += 100;
+          breakdown.push("💰 Price / Value: within your stated budget");
+        }
+        else if(product.price <= budget * 1.10){
+          totalScore += 70;
+          breakdown.push("💰 Price / Value: slightly above your stated budget");
+        }
+        else{
+          totalScore += 20;
+          breakdown.push("💰 Price / Value: above your stated budget");
+        }
 
-if(priority === "durability"){
-  possible += 20;
-
-  if(product.warrantyYears && product.warrantyYears >= 2){
-    score += 20;
-    breakdown.push("🔧 Durability: supported by available warranty evidence");
-  }else{
-    breakdown.push("🔧 Durability: limited supporting evidence");
-  }
-}
-
-    if(priority === "performance"){
-      possible += 20;
-
-      if(product.frozen){
-        score += 20;
+      }else{
+        breakdown.push("💰 Price / Value: limited price evidence");
       }
     }
 
-    if(priority === "warranty"){
-      possible += 20;
 
-      if(product.warrantyYears && product.warrantyYears >= 2){
-        score += 20;
+    // PERFORMANCE
+    if(priority === "performance"){
+
+      if(typeof product.frozen !== "undefined"){
+
+        supportedCriteria++;
+
+        if(product.frozen){
+          totalScore += 100;
+          breakdown.push("⚡ Performance: evidence supports frozen-use requirements");
+        }else{
+          totalScore += 0;
+          breakdown.push("⚡ Performance: does not meet the frozen-use requirement");
+        }
+
+      }else{
+        breakdown.push("⚡ Performance: limited supporting evidence");
+      }
+    }
+
+
+    // RELIABILITY
+    if(priority === "reliability"){
+
+      if(product.reliabilityScore !== undefined){
+
+        supportedCriteria++;
+
+        totalScore += product.reliabilityScore;
+
+        breakdown.push(
+          "🛡 Reliability: supported by available reliability/service evidence"
+        );
+
+      }else{
+
+        breakdown.push(
+          "🛡 Reliability: insufficient evidence to make a strong assessment"
+        );
+
+      }
+    }
+
+
+    // DURABILITY
+    if(priority === "durability"){
+
+      if(product.durabilityScore !== undefined){
+
+        supportedCriteria++;
+
+        totalScore += product.durabilityScore;
+
+        breakdown.push(
+          "🔧 Durability: supported by available durability evidence"
+        );
+
+      }else{
+
+        breakdown.push(
+          "🔧 Durability: insufficient evidence to make a strong assessment"
+        );
+
+      }
+    }
+
+
+    // WARRANTY
+    if(priority === "warranty"){
+
+      if(product.warrantyYears !== undefined){
+
+        supportedCriteria++;
+
+        if(product.warrantyYears >= 2){
+          totalScore += 100;
+          breakdown.push(
+            "📜 Warranty: 2 years or more of available warranty coverage"
+          );
+        }
+        else if(product.warrantyYears >= 1){
+          totalScore += 60;
+          breakdown.push(
+            "📜 Warranty: 1 year of available warranty coverage"
+          );
+        }
+        else{
+          totalScore += 20;
+          breakdown.push(
+            "📜 Warranty: limited available warranty coverage"
+          );
+        }
+
+      }else{
+
+        breakdown.push(
+          "📜 Warranty: warranty evidence is limited"
+        );
+
+      }
+    }
+
+
+    // EASE OF USE
+    if(priority === "usability"){
+
+      if(product.usabilityScore !== undefined){
+
+        supportedCriteria++;
+
+        totalScore += product.usabilityScore;
+
+        breakdown.push(
+          "🧼 Ease of use: supported by available usability evidence"
+        );
+
+      }else{
+
+        breakdown.push(
+          "🧼 Ease of use: insufficient evidence to make a strong assessment"
+        );
+
+      }
+    }
+
+
+    // CAPACITY
+    if(priority === "capacity"){
+
+      if(product.capacityScore !== undefined){
+
+        supportedCriteria++;
+
+        totalScore += product.capacityScore;
+
+        breakdown.push(
+          "📦 Capacity: supported by available capacity evidence"
+        );
+
+      }else{
+
+        breakdown.push(
+          "📦 Capacity: insufficient evidence to make a strong assessment"
+        );
+
+      }
+    }
+
+
+    // ENERGY EFFICIENCY
+    if(priority === "efficiency"){
+
+      if(product.efficiencyScore !== undefined){
+
+        supportedCriteria++;
+
+        totalScore += product.efficiencyScore;
+
+        breakdown.push(
+          "⚡ Energy efficiency: supported by available evidence"
+        );
+
+      }else{
+
+        breakdown.push(
+          "⚡ Energy efficiency: insufficient evidence to make a strong assessment"
+        );
+
       }
     }
 
   });
 
-  // Hard requirements remain separate from the priority score.
-  if(possible === 0) return 0;
 
-return {
-  score: possible === 0 ? 0 : Math.round((score / possible) * 100),
-  breakdown: breakdown
-};
+  // No supported evidence
+  if(supportedCriteria === 0){
+
+    return {
+      score: 0,
+      breakdown: breakdown,
+      evidenceConfidence: "Limited"
+    };
+
+  }
+
+
+  /*
+    Calculate the score only from criteria for which
+    BUYWISE has meaningful evidence.
+  */
+  const rawScore =
+    totalScore / supportedCriteria;
+
+
+  /*
+    Evidence coverage prevents BUYWISE from presenting
+    an artificially high score when important selected
+    priorities have no supporting evidence.
+  */
+  const coverage =
+    priorities.length > 0
+      ? supportedCriteria / priorities.length
+      : 0;
+
+
+  const finalScore =
+    Math.round(rawScore * coverage);
+
+
+  let evidenceConfidence = "Limited";
+
+  if(coverage >= 0.80){
+    evidenceConfidence = "High";
+  }
+  else if(coverage >= 0.50){
+    evidenceConfidence = "Medium";
+  }
+
+
+  return {
+    score: finalScore,
+    breakdown: breakdown,
+    evidenceConfidence: evidenceConfidence
+  };
+
 }
   const products=[
 
