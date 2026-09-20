@@ -831,9 +831,20 @@ p.fitBreakdown.map
       : "🔴 Poor fit"
   }
 </span>
+
 </p>
 
-              <div class="price">
+<div class="small" style="margin-top:8px;">
+  <strong>Why this score?</strong><br>
+  ${
+    p.fitBreakdown
+      ? p.fitBreakdown.map(item => `<div>${item}</div>`).join("")
+      : ""
+  }
+</div>
+
+<div class="price">
+
                 $${p.price.toFixed(2)} ex GST
               </div>
 
