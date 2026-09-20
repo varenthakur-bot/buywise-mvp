@@ -882,5 +882,173 @@ p.fitBreakdown.map
 
 </script>
 
+<!-- BUYWISE TERMS GATE -->
+<div id="buywiseTermsGate">
+
+  <div class="terms-box">
+
+    <div class="logo">BUY<span>WISE</span></div>
+
+    <h2>Before you continue</h2>
+
+    <p>
+      BUYWISE provides up to three product suggestions based on your
+      requirements and the information and data available to us at the time.
+    </p>
+
+    <p>
+      BUYWISE recommendations are intended to assist your purchasing
+      research. They are not a guarantee that a product is the best available
+      option, suitable for every purpose, or free from defects.
+    </p>
+
+    <p>
+      Product prices, specifications, availability, warranties and retailer
+      policies can change. Please verify important information with the
+      relevant seller or manufacturer before purchasing.
+    </p>
+
+    <p>
+      BUYWISE does not manufacture or sell the products recommended.
+      Any purchase, warranty, return, refund, repair or product issue is
+      between the consumer and the relevant seller or manufacturer,
+      subject to applicable consumer rights and laws.
+    </p>
+
+    <p>
+      BUYWISE may receive commissions from retailers or affiliate partners.
+      Commercial relationships do not determine the BUYWISE Fit score.
+    </p>
+
+    <p class="terms-note">
+      Nothing in this information excludes, restricts or modifies any rights
+      or remedies that cannot legally be excluded under applicable law,
+      including the Australian Consumer Law.
+    </p>
+
+    <label class="terms-check">
+      <input type="checkbox" id="buywiseTermsAccept">
+      <span>
+        I have read and understood this information and agree to continue.
+      </span>
+    </label>
+
+    <button id="buywiseContinue" disabled>
+      Accept & Continue →
+    </button>
+
+  </div>
+
+</div>
+
+<style>
+#buywiseTermsGate{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.72);
+  z-index:99999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+.terms-box{
+  background:white;
+  width:min(720px,100%);
+  max-height:90vh;
+  overflow-y:auto;
+  border-radius:22px;
+  padding:35px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.35);
+}
+
+.terms-box .logo{
+  font-size:30px;
+  font-weight:900;
+  margin-bottom:20px;
+}
+
+.terms-box .logo span{
+  color:#6d42ff;
+}
+
+.terms-box h2{
+  margin-top:0;
+  font-size:28px;
+}
+
+.terms-box p{
+  color:#444;
+  line-height:1.55;
+  margin:14px 0;
+}
+
+.terms-note{
+  font-size:13px;
+  color:#666;
+}
+
+.terms-check{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  margin:25px 0;
+  font-weight:600;
+  line-height:1.4;
+}
+
+.terms-check input{
+  width:20px;
+  height:20px;
+  flex-shrink:0;
+}
+
+#buywiseContinue{
+  width:100%;
+  padding:15px;
+  border:0;
+  border-radius:10px;
+  background:#171717;
+  color:white;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+#buywiseContinue:disabled{
+  opacity:0.4;
+  cursor:not-allowed;
+}
+</style>
+
+<script>
+(function(){
+
+  const gate = document.getElementById("buywiseTermsGate");
+  const checkbox = document.getElementById("buywiseTermsAccept");
+  const button = document.getElementById("buywiseContinue");
+  if(sessionStorage.getItem("buywiseTermsAccepted") === "true"){
+  gate.style.display = "none";
+  return;
+}
+
+  checkbox.addEventListener("change", function(){
+    button.disabled = !this.checked;
+  });
+
+  button.addEventListener("click", function(){
+
+    if(!checkbox.checked) return;
+
+    sessionStorage.setItem("buywiseTermsAccepted","true");
+
+    gate.style.display = "none";
+
+  });
+
+})();
+</script>
+  
 </body>
 </html>
