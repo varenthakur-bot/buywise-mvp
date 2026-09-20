@@ -580,33 +580,41 @@ function calculatePriorityScore(product){
 
   let score = 0;
   let possible = 0;
-
+  let breakdown = [];
   priorities.forEach(priority => {
 
-    if(priority === "price"){
-      possible += 30;
-      if(product.price <= budget){
-        score += 30;
-      }
-    }
+   if(priority === "price"){
+  possible += 30;
 
-    if(priority === "reliability"){
-      possible += 20;
+  if(product.price <= budget){
+    score += 30;
+    breakdown.push("💰 Price / Value: meets your budget");
+  }else{
+    breakdown.push("💰 Price / Value: above your budget");
+  }
+}
 
-      // We only award this from evidence we actually have.
-      if(product.warrantyYears && product.warrantyYears >= 2){
-        score += 20;
-      }
-    }
+   if(priority === "reliability"){
+  possible += 20;
 
-    if(priority === "durability"){
-      possible += 20;
+  if(product.warrantyYears && product.warrantyYears >= 2){
+    score += 20;
+    breakdown.push("🛡 Reliability: supported by available warranty evidence");
+  }else{
+    breakdown.push("🛡 Reliability: limited supporting evidence");
+  }
+}
 
-      // Warranty is used only as a documented durability-related signal.
-      if(product.warrantyYears && product.warrantyYears >= 2){
-        score += 20;
-      }
-    }
+if(priority === "durability"){
+  possible += 20;
+
+  if(product.warrantyYears && product.warrantyYears >= 2){
+    score += 20;
+    breakdown.push("🔧 Durability: supported by available warranty evidence");
+  }else{
+    breakdown.push("🔧 Durability: limited supporting evidence");
+  }
+}
 
     if(priority === "performance"){
       possible += 20;
@@ -629,7 +637,10 @@ function calculatePriorityScore(product){
   // Hard requirements remain separate from the priority score.
   if(possible === 0) return 0;
 
-  return Math.round((score / possible) * 100);
+return {
+  score: possible === 0 ? 0 : Math.round((score / possible) * 100),
+  breakdown: breakdown
+};
 }
   const products=[
 
@@ -680,8 +691,11 @@ warrantyYears:0,
   const withinBudget=eligible.filter(p=>p.price<=budget);
 
   withinBudget.forEach(p=>{
-  p.fitScore=calculatePriorityScore(p);
+const result=calculatePriorityScore(p);
+p.fitScore=result.score;
+p.fitBreakdown=result.breakdown;
 });
+ 
   let html="";
 
   if(frozenRequired && withinBudget.length===0){
@@ -724,6 +738,14 @@ warrantyYears:0,
 <p>
   <strong>🎯 BUYWISE FIT: ${p.fitScore}/100</strong>
 </p>
+
+<div class="small">
+  ${
+    p.fitBreakdown
+      ? p.fitBreakdown.map(item => `<div>${item}</div>`).join("")
+      : ""
+  }
+</div>
               <div class="price">
                 $${p.price.toFixed(2)} ex GST
               </div>
