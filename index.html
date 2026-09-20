@@ -819,7 +819,18 @@ p.fitBreakdown.map
               <h3>${p.name}</h3>
 
               <p>
-  <strong>🎯 BUYWISE FIT: ${p.fitScore}/100</strong>
+ <strong>🎯 BUYWISE FIT: ${p.fitScore}/100</strong><br>
+<span class="small">
+  ${
+    p.fitScore >= 80
+      ? "🟢 Strong fit"
+      : p.fitScore >= 60
+      ? "🟡 Good fit"
+      : p.fitScore >= 40
+      ? "🟠 Mixed fit"
+      : "🔴 Poor fit"
+  }
+</span>
 </p>
 
               <div class="price">
