@@ -578,7 +578,9 @@ const usage=answers[1];
 const priorities=answers[3] || [];
 function calculatePriorityScore(product){
 
-  let totalScore = 0;
+  // BUYWISE neutral starting point
+  let score = 50;
+
   let supportedCriteria = 0;
   let breakdown = [];
 
@@ -592,20 +594,24 @@ function calculatePriorityScore(product){
         supportedCriteria++;
 
         if(product.price <= budget){
-          totalScore += 100;
+          score += 15;
           breakdown.push("💰 Price / Value: within your stated budget");
         }
         else if(product.price <= budget * 1.10){
-          totalScore += 70;
+          score += 5;
           breakdown.push("💰 Price / Value: slightly above your stated budget");
         }
         else{
-          totalScore += 20;
+          score -= 15;
           breakdown.push("💰 Price / Value: above your stated budget");
         }
 
       }else{
-        breakdown.push("💰 Price / Value: limited price evidence");
+
+        breakdown.push(
+          "💰 Price / Value: limited supporting evidence"
+        );
+
       }
     }
 
@@ -618,15 +624,23 @@ function calculatePriorityScore(product){
         supportedCriteria++;
 
         if(product.frozen){
-          totalScore += 100;
-          breakdown.push("⚡ Performance: evidence supports frozen-use requirements");
+          score += 20;
+          breakdown.push(
+            "⚡ Performance: evidence supports frozen-use requirements"
+          );
         }else{
-          totalScore += 0;
-          breakdown.push("⚡ Performance: does not meet the frozen-use requirement");
+          score -= 20;
+          breakdown.push(
+            "⚡ Performance: does not meet the frozen-use requirement"
+          );
         }
 
       }else{
-        breakdown.push("⚡ Performance: limited supporting evidence");
+
+        breakdown.push(
+          "⚡ Performance: limited supporting evidence"
+        );
+
       }
     }
 
@@ -638,10 +652,18 @@ function calculatePriorityScore(product){
 
         supportedCriteria++;
 
-        totalScore += product.reliabilityScore;
+        if(product.reliabilityScore >= 80){
+          score += 15;
+        }
+        else if(product.reliabilityScore >= 60){
+          score += 8;
+        }
+        else{
+          score -= 10;
+        }
 
         breakdown.push(
-          "🛡 Reliability: supported by available reliability/service evidence"
+          "🛡 Reliability: assessed using available reliability/service evidence"
         );
 
       }else{
@@ -661,10 +683,18 @@ function calculatePriorityScore(product){
 
         supportedCriteria++;
 
-        totalScore += product.durabilityScore;
+        if(product.durabilityScore >= 80){
+          score += 15;
+        }
+        else if(product.durabilityScore >= 60){
+          score += 8;
+        }
+        else{
+          score -= 10;
+        }
 
         breakdown.push(
-          "🔧 Durability: supported by available durability evidence"
+          "🔧 Durability: assessed using available durability evidence"
         );
 
       }else{
@@ -685,28 +715,28 @@ function calculatePriorityScore(product){
         supportedCriteria++;
 
         if(product.warrantyYears >= 2){
-          totalScore += 100;
+          score += 15;
           breakdown.push(
-            "📜 Warranty: 2 years or more of available warranty coverage"
+            "📜 Warranty: 2 years or more of available coverage"
           );
         }
         else if(product.warrantyYears >= 1){
-          totalScore += 60;
+          score += 7;
           breakdown.push(
-            "📜 Warranty: 1 year of available warranty coverage"
+            "📜 Warranty: 1 year of available coverage"
           );
         }
         else{
-          totalScore += 20;
+          score -= 5;
           breakdown.push(
-            "📜 Warranty: limited available warranty coverage"
+            "📜 Warranty: limited available coverage"
           );
         }
 
       }else{
 
         breakdown.push(
-          "📜 Warranty: warranty evidence is limited"
+          "📜 Warranty: limited warranty evidence"
         );
 
       }
@@ -720,16 +750,24 @@ function calculatePriorityScore(product){
 
         supportedCriteria++;
 
-        totalScore += product.usabilityScore;
+        if(product.usabilityScore >= 80){
+          score += 10;
+        }
+        else if(product.usabilityScore >= 60){
+          score += 5;
+        }
+        else{
+          score -= 5;
+        }
 
         breakdown.push(
-          "🧼 Ease of use: supported by available usability evidence"
+          "🧼 Ease of use: assessed using available usability evidence"
         );
 
       }else{
 
         breakdown.push(
-          "🧼 Ease of use: insufficient evidence to make a strong assessment"
+          "🧼 Ease of use: insufficient supporting evidence"
         );
 
       }
@@ -743,16 +781,24 @@ function calculatePriorityScore(product){
 
         supportedCriteria++;
 
-        totalScore += product.capacityScore;
+        if(product.capacityScore >= 80){
+          score += 10;
+        }
+        else if(product.capacityScore >= 60){
+          score += 5;
+        }
+        else{
+          score -= 5;
+        }
 
         breakdown.push(
-          "📦 Capacity: supported by available capacity evidence"
+          "📦 Capacity: assessed using available capacity evidence"
         );
 
       }else{
 
         breakdown.push(
-          "📦 Capacity: insufficient evidence to make a strong assessment"
+          "📦 Capacity: insufficient supporting evidence"
         );
 
       }
@@ -766,16 +812,24 @@ function calculatePriorityScore(product){
 
         supportedCriteria++;
 
-        totalScore += product.efficiencyScore;
+        if(product.efficiencyScore >= 80){
+          score += 10;
+        }
+        else if(product.efficiencyScore >= 60){
+          score += 5;
+        }
+        else{
+          score -= 5;
+        }
 
         breakdown.push(
-          "⚡ Energy efficiency: supported by available evidence"
+          "⚡ Energy efficiency: assessed using available evidence"
         );
 
       }else{
 
         breakdown.push(
-          "⚡ Energy efficiency: insufficient evidence to make a strong assessment"
+          "⚡ Energy efficiency: insufficient supporting evidence"
         );
 
       }
@@ -784,59 +838,34 @@ function calculatePriorityScore(product){
   });
 
 
-  // No supported evidence
-  if(supportedCriteria === 0){
-
-    return {
-      score: 0,
-      breakdown: breakdown,
-      evidenceConfidence: "Limited"
-    };
-
-  }
+  // Keep score within BUYWISE range
+  score = Math.max(0, Math.min(100, score));
 
 
-  /*
-    Calculate the score only from criteria for which
-    BUYWISE has meaningful evidence.
-  */
-  const rawScore =
-    totalScore / supportedCriteria;
-
-
-  /*
-    Evidence coverage prevents BUYWISE from presenting
-    an artificially high score when important selected
-    priorities have no supporting evidence.
-  */
-  const coverage =
-    priorities.length > 0
-      ? supportedCriteria / priorities.length
-      : 0;
-
-
-  const finalScore =
-    Math.round(rawScore * coverage);
-
-
+  // Evidence confidence is separate from the Fit score
   let evidenceConfidence = "Limited";
 
-  if(coverage >= 0.80){
-    evidenceConfidence = "High";
-  }
-  else if(coverage >= 0.50){
-    evidenceConfidence = "Medium";
+  if(priorities.length > 0){
+
+    const coverage = supportedCriteria / priorities.length;
+
+    if(coverage >= 0.80){
+      evidenceConfidence = "High";
+    }
+    else if(coverage >= 0.50){
+      evidenceConfidence = "Medium";
+    }
+
   }
 
 
   return {
-    score: finalScore,
+    score: score,
     breakdown: breakdown,
     evidenceConfidence: evidenceConfidence
   };
 
 }
-  const products=[
 
     {
       name:"Apuro Bar Blender 2.5L",
