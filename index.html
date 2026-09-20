@@ -574,15 +574,71 @@ function showBusinessResults(){
   document.getElementById("questions").classList.add("hidden");
 
   const budget=Number(answers[0]);
-  const usage=answers[1];
+const usage=answers[1];
+const priorities=answers[3] || [];
+function calculatePriorityScore(product){
 
+  let score = 0;
+  let possible = 0;
+
+  priorities.forEach(priority => {
+
+    if(priority === "price"){
+      possible += 30;
+      if(product.price <= budget){
+        score += 30;
+      }
+    }
+
+    if(priority === "reliability"){
+      possible += 20;
+
+      // We only award this from evidence we actually have.
+      if(product.warrantyYears && product.warrantyYears >= 2){
+        score += 20;
+      }
+    }
+
+    if(priority === "durability"){
+      possible += 20;
+
+      // Warranty is used only as a documented durability-related signal.
+      if(product.warrantyYears && product.warrantyYears >= 2){
+        score += 20;
+      }
+    }
+
+    if(priority === "performance"){
+      possible += 20;
+
+      if(product.frozen){
+        score += 20;
+      }
+    }
+
+    if(priority === "warranty"){
+      possible += 20;
+
+      if(product.warrantyYears && product.warrantyYears >= 2){
+        score += 20;
+      }
+    }
+
+  });
+
+  // Hard requirements remain separate from the priority score.
+  if(possible === 0) return 0;
+
+  return Math.round((score / possible) * 100);
+}
   const products=[
 
     {
       name:"Apuro Bar Blender 2.5L",
       code:"CR836-A",
       price:419.90,
-      warranty:"2 years parts & labour",
+     warranty:"2 years parts & labour",
+warrantyYears:2,
       frozen:false,
       description:"1.68kW variable-speed commercial blender.",
       url:"https://www.nisbets.com.au/apuro-bar-blender-2500ml/cr836-a"
@@ -593,6 +649,7 @@ function showBusinessResults(){
       code:"DU002",
       price:979.90,
       warranty:"1 year parts & labour",
+warrantyYears:0,
       frozen:true,
       description:"3.5 peak-HP motor designed for demanding blending.",
       url:"https://www.nisbets.com.au/waring-hi-power-electronic-keypad-blender-mx1100xtxnna/du002"
@@ -622,6 +679,9 @@ function showBusinessResults(){
 
   const withinBudget=eligible.filter(p=>p.price<=budget);
 
+  withinBudget.forEach(p=>{
+  p.fitScore=calculatePriorityScore(p);
+});
   let html="";
 
   if(frozenRequired && withinBudget.length===0){
@@ -661,6 +721,9 @@ function showBusinessResults(){
 
               <h3>${p.name}</h3>
 
+<p>
+  <strong>🎯 BUYWISE FIT: ${p.fitScore}/100</strong>
+</p>
               <div class="price">
                 $${p.price.toFixed(2)} ex GST
               </div>
