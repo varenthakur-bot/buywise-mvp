@@ -7,7 +7,7 @@
 
 <style>
 *{box-sizing:border-box}
-body{
+body{3
   margin:0;
   font-family:Arial,Helvetica,sans-serif;
   background:#f7f7f5;
@@ -582,7 +582,317 @@ function calculatePriorityScore(product){
   let score = 50;
 
   let supportedCriteria = 0;
-  let breakdown = [];
+
+  let breakdown = [
+    "📊 Starting point: +50"
+  ];
+
+  priorities.forEach(priority => {
+
+    // PRICE / VALUE
+    if(priority === "price"){
+
+      if(product.price && budget){
+
+        supportedCriteria++;
+
+        if(product.price <= budget){
+          score += 15;
+          breakdown.push(
+            "💰 Price / Value: +15 — within your stated budget"
+          );
+        }
+        else if(product.price <= budget * 1.10){
+          score += 5;
+          breakdown.push(
+            "💰 Price / Value: +5 — slightly above your stated budget"
+          );
+        }
+        else{
+          score -= 15;
+          breakdown.push(
+            "💰 Price / Value: -15 — above your stated budget"
+          );
+        }
+
+      }else{
+
+        breakdown.push(
+          "💰 Price / Value: +0 — limited supporting evidence"
+        );
+
+      }
+    }
+
+    // PERFORMANCE
+    if(priority === "performance"){
+
+      if(typeof product.frozen !== "undefined"){
+
+        supportedCriteria++;
+
+        if(product.frozen){
+          score += 20;
+          breakdown.push(
+            "⚡ Performance: +20 — supports frozen-use requirements"
+          );
+        }else{
+          score -= 20;
+          breakdown.push(
+            "⚡ Performance: -20 — does not meet the frozen-use requirement"
+          );
+        }
+
+      }else{
+
+        breakdown.push(
+          "⚡ Performance: +0 — limited supporting evidence"
+        );
+
+      }
+    }
+
+    // RELIABILITY
+    if(priority === "reliability"){
+
+      if(product.reliabilityScore !== undefined){
+
+        supportedCriteria++;
+
+        if(product.reliabilityScore >= 80){
+          score += 15;
+          breakdown.push(
+            "🛡 Reliability: +15 — strong supporting reliability/service evidence"
+          );
+        }
+        else if(product.reliabilityScore >= 60){
+          score += 8;
+          breakdown.push(
+            "🛡 Reliability: +8 — supporting reliability/service evidence"
+          );
+        }
+        else{
+          score -= 10;
+          breakdown.push(
+            "🛡 Reliability: -10 — weaker reliability/service evidence"
+          );
+        }
+
+      }else{
+
+        breakdown.push(
+          "🛡 Reliability: +0 — insufficient evidence"
+        );
+
+      }
+    }
+
+    // DURABILITY
+    if(priority === "durability"){
+
+      if(product.durabilityScore !== undefined){
+
+        supportedCriteria++;
+
+        if(product.durabilityScore >= 80){
+          score += 15;
+          breakdown.push(
+            "🔧 Durability: +15 — strong supporting durability evidence"
+          );
+        }
+        else if(product.durabilityScore >= 60){
+          score += 8;
+          breakdown.push(
+            "🔧 Durability: +8 — supporting durability evidence"
+          );
+        }
+        else{
+          score -= 10;
+          breakdown.push(
+            "🔧 Durability: -10 — weaker durability evidence"
+          );
+        }
+
+      }else{
+
+        breakdown.push(
+          "🔧 Durability: +0 — insufficient evidence"
+        );
+
+      }
+    }
+
+    // WARRANTY
+    if(priority === "warranty"){
+
+      if(product.warrantyYears !== undefined){
+
+        supportedCriteria++;
+
+        if(product.warrantyYears >= 2){
+          score += 15;
+          breakdown.push(
+            "📜 Warranty: +15 — 2 years or more of available coverage"
+          );
+        }
+        else if(product.warrantyYears >= 1){
+          score += 7;
+          breakdown.push(
+            "📜 Warranty: +7 — 1 year of available coverage"
+          );
+        }
+        else{
+          score -= 5;
+          breakdown.push(
+            "📜 Warranty: -5 — limited available coverage"
+          );
+        }
+
+      }else{
+
+        breakdown.push(
+          "📜 Warranty: +0 — limited warranty evidence"
+        );
+
+      }
+    }
+
+    // EASE OF USE
+    if(priority === "usability"){
+
+      if(product.usabilityScore !== undefined){
+
+        supportedCriteria++;
+
+        if(product.usabilityScore >= 80){
+          score += 10;
+          breakdown.push(
+            "🧼 Ease of use: +10 — strong usability evidence"
+          );
+        }
+        else if(product.usabilityScore >= 60){
+          score += 5;
+          breakdown.push(
+            "🧼 Ease of use: +5 — supporting usability evidence"
+          );
+        }
+        else{
+          score -= 5;
+          breakdown.push(
+            "🧼 Ease of use: -5 — weaker usability evidence"
+          );
+        }
+
+      }else{
+
+        breakdown.push(
+          "🧼 Ease of use: +0 — insufficient supporting evidence"
+        );
+
+      }
+    }
+
+    // CAPACITY
+    if(priority === "capacity"){
+
+      if(product.capacityScore !== undefined){
+
+        supportedCriteria++;
+
+        if(product.capacityScore >= 80){
+          score += 10;
+          breakdown.push(
+            "📦 Capacity: +10 — strong capacity evidence"
+          );
+        }
+        else if(product.capacityScore >= 60){
+          score += 5;
+          breakdown.push(
+            "📦 Capacity: +5 — supporting capacity evidence"
+          );
+        }
+        else{
+          score -= 5;
+          breakdown.push(
+            "📦 Capacity: -5 — weaker capacity evidence"
+          );
+        }
+
+      }else{
+
+        breakdown.push(
+          "📦 Capacity: +0 — insufficient supporting evidence"
+        );
+
+      }
+    }
+
+    // ENERGY EFFICIENCY
+    if(priority === "efficiency"){
+
+      if(product.efficiencyScore !== undefined){
+
+        supportedCriteria++;
+
+        if(product.efficiencyScore >= 80){
+          score += 10;
+          breakdown.push(
+            "⚡ Energy efficiency: +10 — strong supporting evidence"
+          );
+        }
+        else if(product.efficiencyScore >= 60){
+          score += 5;
+          breakdown.push(
+            "⚡ Energy efficiency: +5 — supporting evidence"
+          );
+        }
+        else{
+          score -= 5;
+          breakdown.push(
+            "⚡ Energy efficiency: -5 — weaker supporting evidence"
+          );
+        }
+
+      }else{
+
+        breakdown.push(
+          "⚡ Energy efficiency: +0 — insufficient supporting evidence"
+        );
+
+      }
+    }
+  });
+
+  score = Math.max(0, Math.min(100, score));
+
+  let evidenceConfidence = "Limited";
+
+  if(priorities.length > 0){
+
+    const coverage = supportedCriteria / priorities.length;
+
+    if(coverage >= 0.80){
+      evidenceConfidence = "High";
+    }
+    else if(coverage >= 0.50){
+      evidenceConfidence = "Medium";
+    }
+  }
+
+  return {
+    score: score,
+    breakdown: breakdown,
+    evidenceConfidence: evidenceConfidence
+  };
+}
+
+  // BUYWISE neutral starting point
+  let score = 50;
+
+  let supportedCriteria = 0;
+let breakdown = [
+  "📊 Starting point: +50"
+];
 
   priorities.forEach(priority => {
 
