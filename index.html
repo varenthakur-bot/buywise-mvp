@@ -1066,6 +1066,17 @@ p.fitBreakdown.map
   }
 </span>
 
+<div class="small" style="margin-top:6px;">
+  Evidence Confidence:
+  ${
+    p.evidenceConfidence === "High"
+      ? "🟢 High"
+      : p.evidenceConfidence === "Medium"
+      ? "🟡 Medium"
+      : "🔴 Limited"
+  }
+</div>
+
 </p>
 
 <div class="small" style="margin-top:8px;">
