@@ -961,38 +961,6 @@ durabilityScore:85,
 
               <h3>${p.name}</h3>
 
-<p>
-  <strong>🎯 BUYWISE FIT: ${p.fitScore}/100</strong><br>
-<span class="small">
-  ${
-    p.fitScore >= 80
-      ? "🟢 Strong fit"
-    : p.fitScore >= 65
-? "🟡 Good fit"
-: p.fitScore >= 50
-? "🟠 Possible fit"
-: "🔴 Weak fit"
-  }
-</span>
-<div class="small" style="margin-top:6px;">
-  Evidence Confidence:
-  ${
-    p.evidenceConfidence === "High"
-      ? "🟢 High"
-      : p.evidenceConfidence === "Medium"
-      ? "🟡 Medium"
-      : "🔴 Limited"
-  }
-</div>
-</p>
-
-<div class="small">
-  ${
-p.fitBreakdown
-  ? p.fitBreakdown.map(item => `<div>${item}</div>`).join("")
-  : ""
-  }
-</div>
               <div class="price">
                 $${p.price.toFixed(2)} ex GST
               </div>
