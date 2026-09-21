@@ -318,51 +318,68 @@ function showHomeResult(){
 
   document.getElementById("questions").classList.add("hidden");
 
-  let category=searchedProduct.toLowerCase();
+  const category = searchedProduct.toLowerCase();
 
-  let message="BUYWISE has understood your request.";
+  let categoryName = searchedProduct;
+  let categoryMessage = "BUYWISE has understood what you are looking to buy.";
 
-  if(category.includes("smartwatch") ||
-     category.includes("smart watch")){
+  if(
+    category.includes("washing machine") ||
+    category.includes("washer")
+  ){
+    categoryName = "Washing Machine";
 
-    message=`
-      BUYWISE has identified this as a <strong>smartwatch</strong>
-      purchase. The next stage will search approved product
-      sources and compare models against your requirements.
-    `;
-
-  }else if(category.includes("washing machine")){
-
-    message=`
-      BUYWISE has identified this as a
-      <strong>washing machine</strong> purchase.
-      Your requirements are ready for product matching.
-    `;
-
-  }else{
-
-    message=`
-      BUYWISE has identified your search as:
-      <strong>${searchedProduct}</strong>.
-      Product-source search will be connected in the next stage.
-    `;
-
+    categoryMessage =
+      "BUYWISE has identified this as a washing machine purchase.";
   }
 
-  document.getElementById("results").innerHTML=`
+  else if(
+    category.includes("smartwatch") ||
+    category.includes("smart watch")
+  ){
+    categoryName = "Smartwatch";
 
-    <div class="result good">
+    categoryMessage =
+      "BUYWISE has identified this as a smartwatch purchase.";
+  }
 
-      <span class="badge">BUYWISE DECISION ENGINE</span>
+  else if(
+    category.includes("television") ||
+    category.includes("tv")
+  ){
+    categoryName = "TV";
+
+    categoryMessage =
+      "BUYWISE has identified this as a TV purchase.";
+  }
+
+  else if(
+    category.includes("vacuum")
+  ){
+    categoryName = "Vacuum Cleaner";
+
+    categoryMessage =
+      "BUYWISE has identified this as a vacuum cleaner purchase.";
+  }
+
+  document.getElementById("results").innerHTML = `
+
+    <div class="result-good">
+
+      <span class="badge">
+        BUYWISE DECISION ENGINE
+      </span>
 
       <h1>We understand what you're looking for.</h1>
 
-      <p>${message}</p>
+      <p>
+        ${categoryMessage}
+      </p>
 
       <h3>Your requirements</h3>
 
       <p>
-        <strong>Product:</strong> ${searchedProduct}<br>
+        <strong>Product:</strong> ${categoryName}<br>
         <strong>Budget:</strong> ${answers[0] || "Not specified"}<br>
         <strong>Priority:</strong> ${answers[1] || "Not specified"}<br>
         <strong>Usage:</strong> ${answers[2] || "Not specified"}
@@ -373,14 +390,15 @@ function showHomeResult(){
         <h3>🔎 Next BUYWISE step</h3>
 
         <p>
-          BUYWISE will search connected product sources,
-          apply your requirements, remove unsuitable products,
-          and then calculate your personalised BuyWise Fit.
+          BUYWISE will match your requirements against
+          relevant products, remove products that do not meet
+          your requirements, and then calculate your personalised
+          BUYWISE Fit.
         </p>
 
         <p class="small">
-          This prototype does not yet have live product-search
-          API access connected.
+          Product-source matching is not yet connected for this
+          category. No product recommendation has been generated yet.
         </p>
 
       </div>
