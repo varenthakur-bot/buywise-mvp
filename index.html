@@ -965,11 +965,11 @@ warrantyYears:0,
   ${
     p.fitScore >= 80
       ? "🟢 Strong fit"
-      : p.fitScore >= 60
-      ? "🟡 Good fit"
-      : p.fitScore >= 40
-      ? "🟠 Mixed fit"
-      : "🔴 Poor fit"
+    : p.fitScore >= 65
+? "🟡 Good fit"
+: p.fitScore >= 50
+? "🟠 Possible fit"
+: "🔴 Weak fit"
   }
 </span>
 <div class="small" style="margin-top:6px;">
