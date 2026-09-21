@@ -662,9 +662,13 @@ function calculatePriorityScore(product){
           score -= 10;
         }
 
-        breakdown.push(
-          "🛡 Reliability: assessed using available reliability/service evidence"
-        );
+       breakdown.push(
+  product.reliabilityScore >= 80
+    ? "🛡 Reliability: +15 — strong supporting reliability/service evidence"
+    : product.reliabilityScore >= 60
+    ? "🛡 Reliability: +8 — supporting reliability/service evidence"
+    : "🛡 Reliability: -10 — weaker supporting reliability/service evidence"
+);
 
       }else{
 
