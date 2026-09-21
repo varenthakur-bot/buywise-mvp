@@ -698,8 +698,12 @@ function calculatePriorityScore(product){
         }
 
         breakdown.push(
-          "🔧 Durability: assessed using available durability evidence"
-        );
+  product.durabilityScore >= 80
+    ? "🔧 Durability: +15 — strong supporting durability evidence"
+    : product.durabilityScore >= 60
+    ? "🔧 Durability: +8 — supporting durability evidence"
+    : "🔧 Durability: -10 — weaker supporting durability evidence"
+);
 
       }else{
 
