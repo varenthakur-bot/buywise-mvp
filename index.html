@@ -921,7 +921,7 @@ durabilityScore:85,
 
   });
 
-  const withinBudget=eligible.filter(p=>p.price<=budget);
+ const withinBudget=eligible.filter(p=>p.price<=budget*1.10);
 
   withinBudget.forEach(p=>{
   const result=calculatePriorityScore(p);
