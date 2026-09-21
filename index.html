@@ -302,25 +302,25 @@ div.onclick=()=>{
 
     const selected=answers[step];
     const value=option[1];
-if(selected.includes(value)){
 
-  answers[step]=selected.filter(item=>item!==value);
+    if(selected.includes(value)){
 
-  div.classList.remove("selected");
-  div.style.border="";
+      answers[step]=selected.filter(item=>item!==value);
 
-}else{
+      div.classList.remove("selected");
+      div.style.border="";
 
-  if(selected.length>=3){
-    alert("Please choose up to 3 priorities.");
-    return;
-  }
+    }else{
 
-  selected.push(value);
+      if(selected.length>=3){
+        alert("Please choose up to 3 priorities.");
+        return;
+      }
 
-  div.classList.add("selected");
-  div.style.border="2px solid #6d42ff";
-}
+      selected.push(value);
+
+      div.classList.add("selected");
+      div.style.border="2px solid #6d42ff";
     }
 
     return;
