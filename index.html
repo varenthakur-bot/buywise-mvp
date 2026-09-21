@@ -988,9 +988,9 @@ durabilityScore:85,
 
 <div class="small">
   ${
-p.fitBreakdown.map
-     ? p.fitBreakdown.map(item => `<div>${item}</div>`).join("")
-      : ""
+p.fitBreakdown
+  ? p.fitBreakdown.map(item => `<div>${item}</div>`).join("")
+  : ""
   }
 </div>
               <div class="price">
