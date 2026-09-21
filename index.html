@@ -914,9 +914,10 @@ warrantyYears:0,
   const withinBudget=eligible.filter(p=>p.price<=budget);
 
   withinBudget.forEach(p=>{
-const result=calculatePriorityScore(p);
-p.fitScore=result.score;
-p.fitBreakdown=result.breakdown;
+  const result=calculatePriorityScore(p);
+  p.fitScore=result.score;
+  p.fitBreakdown=result.breakdown;
+  p.evidenceConfidence=result.evidenceConfidence;
 });
  
   let html="";
