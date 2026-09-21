@@ -249,16 +249,19 @@ function showHomeQuestion(){
       ]
     },
 
-    {
-      title:"What's most important?",
-      text:"Choose your main priority.",
-      options:[
-        ["Reliability","reliability"],
-        ["Best value","value"],
-        ["Features","features"],
-        ["Ease of use","usability"]
-      ]
-    },
+{
+  title:"What matters most to you?",
+  text:"Choose up to 3 priorities.",
+  multi:true,
+  options:[
+    ["Reliability","reliability"],
+    ["Best value","value"],
+    ["Features","features"],
+    ["Ease of use","usability"],
+    ["Energy efficiency","efficiency"],
+    ["Capacity","capacity"]
+  ]
+},
 
     {
       title:"How will you mainly use it?",
@@ -289,16 +292,46 @@ function showHomeQuestion(){
 
     const div=document.createElement("div");
 
-    div.className="option";
-    div.innerText=option[0];
+div.onclick=()=>{
 
-    div.onclick=()=>{
+  if(q.multi){
 
-      answers[step]=option[1];
-      step++;
+    if(!answers[step]){
+      answers[step]=[];
+    }
 
-      if(step<questions.length){
-        showHomeQuestion();
+    const selected=answers[step];
+    const value=option[1];
+
+    if(selected.includes(value)){
+
+      answers[step]=selected.filter(item=>item!==value);
+      div.classList.remove("selected");
+
+    }else{
+
+      if(selected.length>=3){
+        alert("Please choose up to 3 priorities.");
+        return;
+      }
+
+      selected.push(value);
+      div.classList.add("selected");
+    }
+
+    return;
+  }
+
+  answers[step]=option[1];
+  step++;
+
+  if(step<questions.length){
+    showHomeQuestion();
+  }else{
+    showHomeResult();
+  }
+
+};
       }else{
         showHomeResult();
       }
@@ -307,7 +340,35 @@ function showHomeQuestion(){
 
     box.appendChild(div);
 
-  });
+  });if(q.multi){
+
+  const continueButton=document.createElement("button");
+
+  continueButton.className="primary";
+  continueButton.innerText="Continue →";
+
+  continueButton.style.marginTop="20px";
+  continueButton.style.width="100%";
+
+  continueButton.onclick=()=>{
+
+    if(!answers[step] || answers[step].length===0){
+      alert("Please choose at least one priority.");
+      return;
+    }
+
+    step++;
+
+    if(step<questions.length){
+      showHomeQuestion();
+    }else{
+      showHomeResult();
+    }
+
+  };
+
+  box.appendChild(continueButton);
+}
 
 }
 
@@ -529,6 +590,8 @@ function showBusinessQuestion(){
       box.appendChild(div);
 
     });
+
+    if(q.multi){
 
     const continueButton=document.createElement("button");
 
