@@ -578,6 +578,13 @@ function showHomeResult(){
               <div class="price">$${p.price.toLocaleString()}</div>
               <p class="small">Observed at ${p.source} · ${p.rating}/5 from ${p.reviewCount} reviews</p>
               <p><strong>BUYWISE Fit: ${p.result.score}/100</strong></p>
+
+              <div class="score-explanation">
+  <strong>Why this score?</strong>
+  <ul>
+    ${p.result.breakdown.map(item => `<li>${item}</li>`).join("")}
+  </ul>
+</div>
               <p>${p.result.evidence} Evidence confidence</p>
               <p class="small">${p.result.breakdown.slice(0,3).join(" · ")}</p>
               <a href="${p.url}" target="_blank" rel="noopener noreferrer">
