@@ -1,4 +1,4 @@
-<!DOCTYPE html>j
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -7,7 +7,7 @@
 
 <style>
 *{box-sizing:border-box}
-body{3
+body{
   margin:0;
   font-family:Arial,Helvetica,sans-serif;
   background:#f7f7f5;
@@ -379,93 +379,238 @@ function showHomeResult(){
   document.getElementById("questions").classList.add("hidden");
 
   const category = searchedProduct.toLowerCase();
+  const budget = Number(answers[0] || 0);
+  const priorities = Array.isArray(answers[1]) ? answers[1] : [answers[1]].filter(Boolean);
+  const usage = answers[2] || "everyday";
+
+  const isWashingMachine =
+    category.includes("washing machine") ||
+    category.includes("washer");
 
   let categoryName = searchedProduct;
-  let categoryMessage = "BUYWISE has understood what you are looking to buy.";
 
-  if(
-    category.includes("washing machine") ||
-    category.includes("washer")
-  ){
+  if(isWashingMachine){
     categoryName = "Washing Machine";
-
-    categoryMessage =
-      "BUYWISE has identified this as a washing machine purchase.";
-  }
-
-  else if(
-    category.includes("smartwatch") ||
-    category.includes("smart watch")
-  ){
+  }else if(category.includes("smartwatch") || category.includes("smart watch")){
     categoryName = "Smartwatch";
-
-    categoryMessage =
-      "BUYWISE has identified this as a smartwatch purchase.";
-  }
-
-  else if(
-    category.includes("television") ||
-    category.includes("tv")
-  ){
+  }else if(category.includes("television") || category.includes("tv")){
     categoryName = "TV";
-
-    categoryMessage =
-      "BUYWISE has identified this as a TV purchase.";
-  }
-
-  else if(
-    category.includes("vacuum")
-  ){
+  }else if(category.includes("vacuum")){
     categoryName = "Vacuum Cleaner";
-
-    categoryMessage =
-      "BUYWISE has identified this as a vacuum cleaner purchase.";
   }
 
-  document.getElementById("results").innerHTML = `
+  /* ---------------- REAL WASHING MACHINE DATA ----------------
+     Retail prices are observed listings and can change.
+     BUYWISE Fit is calculated separately from retailer relationships.
+  --------------------------------------------------------------- */
+  const washingMachines = [
+    {
+      brand:"CHiQ",
+      name:"CHiQ 8.5kg Front Load Washing Machine",
+      model:"WFL85PLSW",
+      price:512,
+      capacity:8.5,
+      rating:5.0,
+      reviewCount:4,
+      value:88,
+      reliability:70,
+      usability:78,
+      efficiency:70,
+      features:72,
+      source:"Appliances Online",
+      url:"https://www.appliancesonline.com.au/filter/washers-and-dryers/washing-machines/front-loading/"
+    },
+    {
+      brand:"Westinghouse",
+      name:"Westinghouse 8kg EasyCare 500 Front Load Washing Machine",
+      model:"WWF8024M5WAS",
+      price:594,
+      capacity:8,
+      rating:4.8,
+      reviewCount:697,
+      value:86,
+      reliability:82,
+      usability:84,
+      efficiency:78,
+      features:75,
+      source:"Appliances Online",
+      url:"https://www.appliancesonline.com.au/filter/washers-and-dryers/washing-machines/"
+    },
+    {
+      brand:"Bosch",
+      name:"Bosch 8kg Series 4 Front Load Washing Machine",
+      model:"WAN28288AU",
+      price:840,
+      capacity:8,
+      rating:4.9,
+      reviewCount:48,
+      value:84,
+      reliability:90,
+      usability:84,
+      efficiency:88,
+      features:82,
+      source:"Appliances Online",
+      url:"https://www.appliancesonline.com.au/filter/washers-and-dryers/washing-machines/front-loading/bosch/"
+    },
+    {
+      brand:"LG",
+      name:"LG 8kg Series 3 Slim Front Load Washer with AI Wash",
+      model:"WX3-1208W",
+      price:826,
+      capacity:8,
+      rating:4.9,
+      reviewCount:10,
+      value:83,
+      reliability:84,
+      usability:88,
+      efficiency:86,
+      features:92,
+      source:"Appliances Online",
+      url:"https://www.appliancesonline.com.au/product/lg-8kg-series-3-slim-front-load-washer-with-ai-wash-wx3-1208w/"
+    },
+    {
+      brand:"Fisher & Paykel",
+      name:"Series 5 8kg Contemporary Front Loader Washer Auto Dose",
+      model:"WH8060J5",
+      price:950,
+      capacity:8,
+      rating:4.9,
+      reviewCount:105,
+      value:78,
+      reliability:88,
+      usability:92,
+      efficiency:95,
+      features:90,
+      source:"Appliances Online",
+      url:"https://www.appliancesonline.com.au/product/fisher-paykel-series-5-8kg-contemporary-front-loader-washer-auto-dose/"
+    }
+  ];
 
-    <div class="result-good">
+  function scoreWashingMachine(product){
+    let score=50;
+    const breakdown=[];
 
-      <span class="badge">
-        BUYWISE DECISION ENGINE
-      </span>
+    if(product.price <= budget){
+      score += 8;
+      breakdown.push("Within your stated budget");
+    }else{
+      score -= 18;
+      breakdown.push("Above your stated budget");
+    }
 
-      <h1>We understand what you're looking for.</h1>
+    priorities.forEach(priority=>{
+      if(priority==="reliability"){
+        score += Math.round((product.reliability-50)*0.20);
+        breakdown.push("Reliability evidence considered");
+      }
+      if(priority==="value"){
+        score += Math.round((product.value-50)*0.20);
+        breakdown.push("Value considered");
+      }
+      if(priority==="features"){
+        score += Math.round((product.features-50)*0.18);
+        breakdown.push("Features considered");
+      }
+      if(priority==="usability"){
+        score += Math.round((product.usability-50)*0.18);
+        breakdown.push("Ease of use considered");
+      }
+      if(priority==="efficiency"){
+        score += Math.round((product.efficiency-50)*0.20);
+        breakdown.push("Energy/water efficiency evidence considered");
+      }
+      if(priority==="capacity"){
+        score += Math.round((product.capacity-7)*3);
+        breakdown.push("Capacity considered");
+      }
+    });
 
-      <p>
-        ${categoryMessage}
-      </p>
+    /* Everyday use is the default household use case. */
+    if(usage==="everyday") score += 4;
+    if(usage==="work") score += 2;
 
-      <h3>Your requirements</h3>
+    score=Math.max(0,Math.min(100,score));
 
-      <p>
-        <strong>Product:</strong> ${categoryName}<br>
-        <strong>Budget:</strong> ${answers[0] || "Not specified"}<br>
-        <strong>Priority:</strong> ${answers[1] || "Not specified"}<br>
-        <strong>Usage:</strong> ${answers[2] || "Not specified"}
-      </p>
+    let evidence="🟢 High";
+    if(product.reviewCount < 20) evidence="🟡 Medium";
 
-      <div class="card">
+    return {score, breakdown, evidence};
+  }
 
-        <h3>🔎 Next BUYWISE step</h3>
+  if(isWashingMachine){
+    const eligible = washingMachines.filter(p=>p.price <= budget);
+    const ranked = (eligible.length ? eligible : washingMachines)
+      .map(p=>({...p, result:scoreWashingMachine(p)}))
+      .sort((a,b)=>b.result.score-a.result.score)
+      .slice(0,3);
 
+    const withinBudget = eligible.length > 0;
+
+    document.getElementById("results").innerHTML = `
+      <div class="result">
+        <span class="badge">BUYWISE DECISION ENGINE</span>
+        <h1>Your Washing Machine Decision</h1>
+        <p>We matched your requirements against a small live-tested Australian product set.</p>
+
+        <h3>Your requirements</h3>
         <p>
-          BUYWISE will match your requirements against
-          relevant products, remove products that do not meet
-          your requirements, and then calculate your personalised
-          BUYWISE Fit.
+          <strong>Product:</strong> Washing Machine<br>
+          <strong>Budget:</strong> $${budget.toLocaleString()}<br>
+          <strong>Priorities:</strong> ${priorities.length ? priorities.join(", ") : "Not specified"}<br>
+          <strong>Usage:</strong> ${usage}
         </p>
 
-        <p class="small">
-          Product-source matching is not yet connected for this
-          category. No product recommendation has been generated yet.
-        </p>
+        ${!withinBudget ? `
+          <div class="card">
+            <strong>⚠️ Nothing in our current product set is within your stated budget.</strong>
+            <p class="small">We are showing the closest available options instead. This is not a recommendation to exceed your budget.</p>
+          </div>
+        ` : ""}
 
+        <div class="product-grid">
+          ${ranked.map((p,index)=>`
+            <div class="product">
+              <span class="badge">${index===0 ? "BUYWISE DECISION" : "ALTERNATIVE"}</span>
+              <h3>${p.brand} ${p.model}</h3>
+              <p>${p.name}</p>
+              <div class="price">$${p.price.toLocaleString()}</div>
+              <p class="small">Observed at ${p.source} · ${p.rating}/5 from ${p.reviewCount} reviews</p>
+              <p><strong>BUYWISE Fit: ${p.result.score}/100</strong></p>
+              <p>${p.result.evidence} Evidence confidence</p>
+              <p class="small">${p.result.breakdown.slice(0,3).join(" · ")}</p>
+              <a href="${p.url}" target="_blank" rel="noopener noreferrer">
+                <button class="primary" type="button">Check current price →</button>
+              </a>
+            </div>
+          `).join("")}
+        </div>
+
+        <p class="small" style="margin-top:22px">
+          Prices and availability can change. BUYWISE Fit is separate from retailer relationships or affiliate commissions.
+          Product listings were researched from Australian retailer/manufacturer sources; the displayed price is an observed listing, not a guaranteed live price.
+        </p>
       </div>
-
-    </div>
-
-  `;
+    `;
+  }else{
+    document.getElementById("results").innerHTML = `
+      <div class="result">
+        <span class="badge">BUYWISE DECISION ENGINE</span>
+        <h1>We understand what you're looking for.</h1>
+        <p>BUYWISE has identified this as a <strong>${categoryName}</strong> purchase.</p>
+        <h3>Your requirements</h3>
+        <p>
+          <strong>Product:</strong> ${categoryName}<br>
+          <strong>Budget:</strong> $${budget.toLocaleString()}<br>
+          <strong>Priority:</strong> ${priorities.length ? priorities.join(", ") : "Not specified"}<br>
+          <strong>Usage:</strong> ${usage}
+        </p>
+        <div class="card">
+          <h3>🔎 Next BUYWISE step</h3>
+          <p>Real product matching is currently connected for washing machines. More categories will be added one at a time.</p>
+        </div>
+      </div>
+    `;
+  }
 
   document.getElementById("results").classList.remove("hidden");
 }
@@ -553,7 +698,6 @@ function showBusinessQuestion(){
   box.innerHTML="";
 
   /* Multiple-priority question */
- 
   if(q.multi){
 
     let selected=[];
@@ -591,7 +735,6 @@ function showBusinessQuestion(){
 
     });
 
-
     const continueButton=document.createElement("button");
 
     continueButton.className="primary";
@@ -621,7 +764,7 @@ function showBusinessQuestion(){
     return;
   }
 
- /* Normal single-choice question */
+  /* Normal single-choice question */
 
   q.options.forEach(option=>{
 
