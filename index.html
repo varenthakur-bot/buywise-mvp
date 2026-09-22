@@ -639,12 +639,7 @@ function scoreWashingMachine(product){
               <p class="small">Observed at ${p.source} · ${p.rating}/5 from ${p.reviewCount} reviews</p>
               <p><strong>BUYWISE Fit: ${p.result.score}/100</strong></p>
               <p>${p.result.evidence} Evidence confidence</p>
-              <div class="score-explanation">
-              <strong>Why this score?</strong>
-              <ul>
-              ${p.result.breakdown.map(item => `<li>${item}</li>`).join("")}
-              </ul>
-              </div>
+             <p class="small">${p.result.breakdown.slice(0,3).join(" · ")}</p>
               <a href="${p.url}" target="_blank" rel="noopener noreferrer">
                 <button class="primary" type="button">Check current price →</button>
               </a>
