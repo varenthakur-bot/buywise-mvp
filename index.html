@@ -486,58 +486,118 @@ function showHomeResult(){
       source:"Appliances Online",
       url:"https://www.appliancesonline.com.au/product/fisher-paykel-series-5-8kg-contemporary-front-loader-washer-auto-dose/"
     }
-  ];
+function scoreWashingMachine(product){
 
-  function scoreWashingMachine(product){
-    let score=50;
-    const breakdown=[];
+  // Every product that passes the hard requirements starts at 50.
+  let score = 50;
+  const breakdown = [];
 
-    if(product.price <= budget){
-      score += 8;
-      breakdown.push("Within your stated budget");
-    }else{
-      score -= 18;
-      breakdown.push("Above your stated budget");
+  // Budget is already used as a hard filter.
+  if(product.price <= budget){
+    score += 5;
+    breakdown.push("💰 Within your stated budget: +5");
+  }
+
+  function priorityPoints(value, label){
+    if(value >= 90){
+      breakdown.push(label + ": +12 — strong evidence");
+      return 12;
     }
 
-    priorities.forEach(priority=>{
-      if(priority==="reliability"){
-        score += Math.round((product.reliability-50)*0.20);
-        breakdown.push("Reliability evidence considered");
-      }
-      if(priority==="value"){
-        score += Math.round((product.value-50)*0.20);
-        breakdown.push("Value considered");
-      }
-      if(priority==="features"){
-        score += Math.round((product.features-50)*0.18);
-        breakdown.push("Features considered");
-      }
-      if(priority==="usability"){
-        score += Math.round((product.usability-50)*0.18);
-        breakdown.push("Ease of use considered");
-      }
-      if(priority==="efficiency"){
-        score += Math.round((product.efficiency-50)*0.20);
-        breakdown.push("Energy/water efficiency evidence considered");
-      }
-      if(priority==="capacity"){
-        score += Math.round((product.capacity-7)*3);
-        breakdown.push("Capacity considered");
-      }
-    });
+    if(value >= 80){
+      breakdown.push(label + ": +8 — good evidence");
+      return 8;
+    }
 
-    /* Everyday use is the default household use case. */
-    if(usage==="everyday") score += 4;
-    if(usage==="work") score += 2;
+    if(value >= 70){
+      breakdown.push(label + ": +4 — reasonable evidence");
+      return 4;
+    }
 
-    score=Math.max(0,Math.min(100,score));
+    if(value >= 60){
+      breakdown.push(label + ": +0 — moderate evidence");
+      return 0;
+    }
 
-    let evidence="🟢 High";
-    if(product.reviewCount < 20) evidence="🟡 Medium";
-
-    return {score, breakdown, evidence};
+    breakdown.push(label + ": -6 — weaker evidence");
+    return -6;
   }
+
+  // Only the customer's selected priorities affect the priority score.
+  priorities.forEach(priority => {
+
+    if(priority === "reliability"){
+      score += priorityPoints(
+        product.reliability,
+        "🛡 Reliability"
+      );
+    }
+
+    if(priority === "value"){
+      score += priorityPoints(
+        product.value,
+        "💰 Value"
+      );
+    }
+
+    if(priority === "features"){
+      score += priorityPoints(
+        product.features,
+        "⚙ Features"
+      );
+    }
+
+    if(priority === "usability"){
+      score += priorityPoints(
+        product.usability,
+        "🧼 Ease of use"
+      );
+    }
+
+    if(priority === "efficiency"){
+      score += priorityPoints(
+        product.efficiency,
+        "⚡ Energy efficiency"
+      );
+    }
+
+    if(priority === "capacity"){
+      const capacityScore =
+        product.capacity >= 9 ? 95 :
+        product.capacity >= 8 ? 85 :
+        product.capacity >= 7 ? 70 : 55;
+
+      score += priorityPoints(
+        capacityScore,
+        "📦 Capacity"
+      );
+    }
+
+  });
+
+  // Small usage adjustment.
+  if(usage === "everyday"){
+    score += 3;
+    breakdown.push("🏠 Everyday-use suitability: +3");
+  }
+
+  score = Math.max(0, Math.min(100, score));
+
+  // Evidence confidence is separate from BUYWISE Fit.
+  let evidence = "🔴 Limited";
+
+  if(product.reviewCount >= 50){
+    evidence = "🟢 High";
+  }else if(product.reviewCount >= 20){
+    evidence = "🟡 Medium";
+  }
+
+  return {
+    score: Math.round(score),
+    breakdown: breakdown,
+    evidence: evidence
+  };
+}
 
   if(isWashingMachine){
     const eligible = washingMachines.filter(p=>p.price <= budget);
@@ -579,7 +639,12 @@ function showHomeResult(){
               <p class="small">Observed at ${p.source} · ${p.rating}/5 from ${p.reviewCount} reviews</p>
               <p><strong>BUYWISE Fit: ${p.result.score}/100</strong></p>
               <p>${p.result.evidence} Evidence confidence</p>
-              <p class="small">${p.result.breakdown.slice(0,3).join(" · ")}</p>
+              <div class="score-explanation">
+              <strong>Why this score?</strong>
+              <ul>
+              ${p.result.breakdown.map(item => `<li>${item}</li>`).join("")}
+              </ul>
+              </div>
               <a href="${p.url}" target="_blank" rel="noopener noreferrer">
                 <button class="primary" type="button">Check current price →</button>
               </a>
