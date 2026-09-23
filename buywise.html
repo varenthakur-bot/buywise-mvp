@@ -390,9 +390,52 @@ function showHomeResult(){
     category.includes("washing machine") ||
     category.includes("washer");
 
-  let categoryName = searchedProduct;
+  const isWashingMachine =
+  category.includes("washing machine") ||
+  category.includes("washer");
 
-  if(isWashingMachine){
+const isSmartwatch =
+  category.includes("smartwatch") ||
+  category.includes("smart watch");
+
+const isTV =
+  category.includes("television") ||
+  category.includes(" tv") ||
+  category === "tv";
+
+const isVacuum =
+  category.includes("vacuum");
+
+const isLaptop =
+  category.includes("laptop") ||
+  category.includes("notebook");
+
+const isCommercialBlender =
+  category.includes("commercial blender") ||
+  category.includes("bar blender") ||
+  category.includes("blender");
+
+const isCoffeeMachine =
+  category.includes("coffee machine") ||
+  category.includes("espresso machine");
+
+let categoryName = searchedProduct;
+
+if(isWashingMachine){
+  categoryName = "Washing Machine";
+}else if(isSmartwatch){
+  categoryName = "Smartwatch";
+}else if(isTV){
+  categoryName = "TV";
+}else if(isVacuum){
+  categoryName = "Vacuum Cleaner";
+}else if(isLaptop){
+  categoryName = "Laptop";
+}else if(isCommercialBlender){
+  categoryName = "Commercial Blender";
+}else if(isCoffeeMachine){
+  categoryName = "Coffee Machine";
+}
     categoryName = "Washing Machine";
   }else if(category.includes("smartwatch") || category.includes("smart watch")){
     categoryName = "Smartwatch";
