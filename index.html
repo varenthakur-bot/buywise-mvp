@@ -580,9 +580,28 @@ function showHomeResult(){
               <p><strong>BUYWISE Fit: ${p.result.score}/100</strong></p>
 
      <div class="score-explanation">
-  <strong>Why this score?</strong>
+  <strong>Why BUYWISE chose this</strong>
   <ul>
-    ${p.result.breakdown.map(item => `<li>${item}</li>`).join("")}
+    ${p.result.breakdown.map(item => {
+      let explanation = item;
+
+      explanation = explanation
+        .replace("💰 Within your stated budget: +5", "💰 Fits your stated budget")
+        .replace(/🛡 Reliability: \+12 — strong evidence/, "🛡 Reliability: strong supporting evidence")
+        .replace(/🛡 Reliability: \+8 — good evidence/, "🛡 Reliability: good supporting evidence")
+        .replace(/🛡 Reliability: \+4 — reasonable evidence/, "🛡 Reliability: reasonable supporting evidence")
+        .replace(/🛡 Reliability: \+0 — moderate evidence/, "🛡 Reliability: moderate supporting evidence")
+        .replace(/🛡 Reliability: -6 — weaker evidence/, "🛡 Reliability: weaker supporting evidence")
+        .replace(/💰 Value: \+12 — strong evidence/, "💰 Value: strong supporting evidence")
+        .replace(/💰 Value: \+8 — good evidence/, "💰 Value: good supporting evidence")
+        .replace(/💰 Value: \+4 — reasonable evidence/, "💰 Value: reasonable supporting evidence")
+        .replace(/⚡ Energy efficiency: \+12 — strong evidence/, "⚡ Energy efficiency: strong supporting evidence")
+        .replace(/⚡ Energy efficiency: \+8 — good evidence/, "⚡ Energy efficiency: good supporting evidence")
+        .replace(/⚡ Energy efficiency: \+4 — reasonable evidence/, "⚡ Energy efficiency: reasonable supporting evidence")
+        .replace(/🏠 Everyday-use suitability: \+3/, "🏠 Suitable for everyday use");
+
+      return `<li>${explanation.replace(/: \+[0-9]+|: -[0-9]+/g, "")}</li>`;
+    }).join("")}
   </ul>
 </div>
               <p>${p.result.evidence} Evidence confidence</p>
