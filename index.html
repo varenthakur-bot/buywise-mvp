@@ -386,11 +386,7 @@ function showHomeResult(){
     category.includes("washing machine") ||
     category.includes("washer");
 
-  const isWashingMachine =
-  category.includes("washing machine") ||
-  category.includes("washer");
-
-const isSmartwatch =
+  const isSmartwatch =
   category.includes("smartwatch") ||
   category.includes("smart watch");
 
@@ -415,7 +411,7 @@ const isCoffeeMachine =
   category.includes("coffee machine") ||
   category.includes("espresso machine");
 
-let categoryName = searchedProduct;
+  let categoryName = searchedProduct;
 
 if(isWashingMachine){
   categoryName = "Washing Machine";
@@ -432,14 +428,6 @@ if(isWashingMachine){
 }else if(isCoffeeMachine){
   categoryName = "Coffee Machine";
 }
-    categoryName = "Washing Machine";
-  }else if(category.includes("smartwatch") || category.includes("smart watch")){
-    categoryName = "Smartwatch";
-  }else if(category.includes("television") || category.includes("tv")){
-    categoryName = "TV";
-  }else if(category.includes("vacuum")){
-    categoryName = "Vacuum Cleaner";
-  }
 
   /* ---------------- REAL WASHING MACHINE DATA ----------------
      Retail prices are observed listings and can change.
