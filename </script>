@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">fff
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BUYWISE — Compare Less. Decide Wise.</title>
 <meta name="commission-factory-verification" content="3245527a705a4135813a22b59cb37c9b" />
@@ -10,7 +10,7 @@
 *{box-sizing:border-box}
 body{
   margin:0;
-  font-family:Arial,Helvetica,sans-serif;f
+  font-family:Arial,Helvetica,sans-serif;
   background:#f7f7f5;
   color:#171717
 }
@@ -295,81 +295,80 @@ function showHomeQuestion(){
     div.className="option";
     div.innerText=option[0];
 
-div.onclick=()=>{
+    div.onclick=()=>{
 
-  if(q.multi){
+      if(q.multi){
 
-    if(!answers[step]){
-      answers[step]=[];
-    }
+        if(!answers[step]){
+          answers[step]=[];
+        }
 
-    const selected=answers[step];
-    const value=option[1];
+        const selected=answers[step];
+        const value=option[1];
 
-    if(selected.includes(value)){
+        if(selected.includes(value)){
 
-      answers[step]=selected.filter(item=>item!==value);
+          answers[step]=selected.filter(item=>item!==value);
 
-      div.classList.remove("selected");
-      div.style.border="";
+          div.classList.remove("selected");
+          div.style.border="";
 
-    }else{
+        }else{
 
-      if(selected.length>=3){
-        alert("Please choose up to 3 priorities.");
+          if(selected.length>=3){
+            alert("Please choose up to 3 priorities.");
+            return;
+          }
+
+          selected.push(value);
+
+          div.classList.add("selected");
+          div.style.border="2px solid #6d42ff";
+        }
+
         return;
       }
 
-      selected.push(value);
+      answers[step]=option[1];
+      step++;
 
-      div.classList.add("selected");
-      div.style.border="2px solid #6d42ff";
-    }
+      if(step<questions.length){
+        showHomeQuestion();
+      }else{
+        showHomeResult();
+      }
+    };
 
-    return;
-  }
-
-  answers[step]=option[1];
-  step++;
-
-  if(step<questions.length){
-    showHomeQuestion();
-  }else{
-    showHomeResult();
-  }
-
-};
-      
     box.appendChild(div);
+  });
 
-  const continueButton=document.createElement("button");
+  if(q.multi){
 
-  continueButton.className="primary";
-  continueButton.innerText="Continue →";
+    const continueButton=document.createElement("button");
 
-  continueButton.style.marginTop="20px";
-  continueButton.style.width="100%";
+    continueButton.className="primary";
+    continueButton.innerText="Continue →";
+    continueButton.style.marginTop="20px";
+    continueButton.style.width="100%";
 
-  continueButton.onclick=()=>{
+    continueButton.onclick=()=>{
 
-    if(!answers[step] || answers[step].length===0){
-      alert("Please choose at least one priority.");
-      return;
-    }
+      if(!answers[step] || answers[step].length===0){
+        alert("Please choose at least one priority.");
+        return;
+      }
 
-    step++;
+      step++;
 
-    if(step<questions.length){
-      showHomeQuestion();
-    }else{
-      showHomeResult();
-    }
+      if(step<questions.length){
+        showHomeQuestion();
+      }else{
+        showHomeResult();
+      }
+    };
 
-  };
-  
-}
-
-/* ---------------- HOME RESULT ---------------- */
+    box.appendChild(continueButton);
+  }
 
 function showHomeResult(){
 
@@ -1392,6 +1391,7 @@ durabilityScore:85,
 
    }
 
+   }
 
 </script>
 
