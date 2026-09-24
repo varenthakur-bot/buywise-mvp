@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8">fff
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BUYWISE — Compare Less. Decide Wise.</title>
 <meta name="commission-factory-verification" content="3245527a705a4135813a22b59cb37c9b" />
@@ -10,7 +10,7 @@
 *{box-sizing:border-box}
 body{
   margin:0;
-  font-family:Arial,Helvetica,sans-serif;
+  font-family:Arial,Helvetica,sans-serif;f
   background:#f7f7f5;
   color:#171717
 }
@@ -295,87 +295,98 @@ function showHomeQuestion(){
     div.className="option";
     div.innerText=option[0];
 
-    div.onclick=()=>{
-
-      if(q.multi){
-
-        if(!answers[step]){
-          answers[step]=[];
-        }
-
-        const selected=answers[step];
-        const value=option[1];
-
-        if(selected.includes(value)){
-
-          answers[step]=selected.filter(item=>item!==value);
-
-          div.classList.remove("selected");
-          div.style.border="";
-
-        }else{
-
-          if(selected.length>=3){
-            alert("Please choose up to 3 priorities.");
-            return;
-          }
-
-          selected.push(value);
-
-          div.classList.add("selected");
-          div.style.border="2px solid #6d42ff";
-        }
-
-        return;
-      }
-
-      answers[step]=option[1];
-      step++;
-
-      if(step<questions.length){
-        showHomeQuestion();
-      }else{
-        showHomeResult();
-      }
-    };
-
-    box.appendChild(div);
-  });
+div.onclick=()=>{
 
   if(q.multi){
 
-    const continueButton=document.createElement("button");
+    if(!answers[step]){
+      answers[step]=[];
+    }
 
-    continueButton.className="primary";
-    continueButton.innerText="Continue →";
-    continueButton.style.marginTop="20px";
-    continueButton.style.width="100%";
+    const selected=answers[step];
+    const value=option[1];
 
-    continueButton.onclick=()=>{
+    if(selected.includes(value)){
 
-      if(!answers[step] || answers[step].length===0){
-        alert("Please choose at least one priority.");
+      answers[step]=selected.filter(item=>item!==value);
+
+      div.classList.remove("selected");
+      div.style.border="";
+
+    }else{
+
+      if(selected.length>=3){
+        alert("Please choose up to 3 priorities.");
         return;
       }
 
-      step++;
+      selected.push(value);
 
-      if(step<questions.length){
-        showHomeQuestion();
-      }else{
-        showHomeResult();
-      }
-    };
+      div.classList.add("selected");
+      div.style.border="2px solid #6d42ff";
+    }
 
-    box.appendChild(continueButton);
+    return;
   }
+
+  answers[step]=option[1];
+  step++;
+
+  if(step<questions.length){
+    showHomeQuestion();
+  }else{
+    showHomeResult();
+  }
+
+};
+      
+    box.appendChild(div);
+
+  });
+
+  const continueButton=document.createElement("button");
+
+  continueButton.className="primary";
+  continueButton.innerText="Continue →";
+
+  continueButton.style.marginTop="20px";
+  continueButton.style.width="100%";
+
+  continueButton.onclick=()=>{
+
+    if(!answers[step] || answers[step].length===0){
+      alert("Please choose at least one priority.");
+      return;
+    }
+
+    step++;
+
+    if(step<questions.length){
+      showHomeQuestion();
+    }else{
+      showHomeResult();
+    }
+
+  };
+  
+}
+
+/* ---------------- HOME RESULT ---------------- */
 
 function showHomeResult(){
 
   document.getElementById("questions").classList.add("hidden");
 
   const category = searchedProduct.toLowerCase();
-  const budget = Number(answers[0] || 0);
+  const priceBracket = answers[0] || "";
+  const priceRanges = {
+    "under500": { min: 0, max: 500, label: "Under $500" },
+    "500to750": { min: 500, max: 750, label: "$500–$750" },
+    "750to1000": { min: 750, max: 1000, label: "$750–$1,000" },
+    "1000to1500": { min: 1000, max: 1500, label: "$1,000–$1,500" },
+    "over1500": { min: 1500, max: Infinity, label: "$1,500+" }
+  };
+  const selectedPriceRange = priceRanges[priceBracket] || null;
   const priorities = Array.isArray(answers[1]) ? answers[1] : [answers[1]].filter(Boolean);
   const usage = answers[2] || "everyday";
 
@@ -477,7 +488,7 @@ if(isWashingMachine){
       efficiency:88,
       features:82,
       source:"Appliances Online",
-      url:"https://www.appliancesonline.com.au/product/bosch-series-4-8kg-front-load-washing-machine-wan28288au/"
+      url:"https://www.appliancesonline.com.au/filter/washers-and-dryers/washing-machines/front-loading/bosch/"
     },
     {
       brand:"LG",
@@ -565,7 +576,9 @@ if(isWashingMachine){
   }
 
   if(isWashingMachine){
-    const eligible = washingMachines.filter(p=>p.price <= budget);
+    const eligible = selectedPriceRange
+      ? washingMachines.filter(p => p.price >= selectedPriceRange.min && p.price <= selectedPriceRange.max)
+      : washingMachines;
     const ranked = (eligible.length ? eligible : washingMachines)
       .map(p=>({...p, result:scoreWashingMachine(p)}))
       .sort((a,b)=>b.result.score-a.result.score)
@@ -582,7 +595,7 @@ if(isWashingMachine){
         <h3>Your requirements</h3>
         <p>
           <strong>Product:</strong> Washing Machine<br>
-          <strong>Budget:</strong> $${budget.toLocaleString()}<br>
+          <strong>Price range:</strong> ${selectedPriceRange ? selectedPriceRange.label : "Not specified"}<br>
           <strong>Priorities:</strong> ${priorities.length ? priorities.join(", ") : "Not specified"}<br>
           <strong>Usage:</strong> ${usage}
         </p>
@@ -677,13 +690,14 @@ if(isWashingMachine){
 const businessQuestions=[
 
   {
-    title:"What's your budget?",
-    text:"How much are you comfortable spending?",
+    title:"What price range are you looking at?",
+    text:"Choose the price bracket you want BUYWISE to search within.",
     options:[
-      ["$500 or less","500"],
-      ["$501 – $800","800"],
-      ["$801 – $1,000","1000"],
-      ["Over $1,000","1500"]
+      ["Under $500","under500"],
+      ["$500 – $750","500to750"],
+      ["$750 – $1,000","750to1000"],
+      ["$1,000 – $1,500","1000to1500"],
+      ["$1,500+","over1500"]
     ]
   },
 
@@ -1391,7 +1405,6 @@ durabilityScore:85,
 
    }
 
-   }
 
 </script>
 
