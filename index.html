@@ -518,44 +518,58 @@ if(isWashingMachine){
     let score=50;
     const breakdown=[];
 
+    /* BUYWISE starts every product at a neutral 50/100.
+       Each adjustment below is shown to the customer so the score is transparent. */
     if(selectedPriceRange && product.price >= selectedPriceRange.min && product.price <= selectedPriceRange.max){
       score += 8;
-      breakdown.push("Within your selected price range");
+      breakdown.push(`Price range: +8 — $${product.price.toLocaleString()} fits ${selectedPriceRange.label}`);
     }else{
       score -= 18;
-      breakdown.push("Outside your selected price range");
+      breakdown.push(`Price range: -18 — $${product.price.toLocaleString()} is outside ${selectedPriceRange ? selectedPriceRange.label : "your selected range"}`);
     }
 
     priorities.forEach(priority=>{
       if(priority==="reliability"){
-        score += Math.round((product.reliability-50)*0.20);
-        breakdown.push("Reliability evidence considered");
+        const points=Math.round((product.reliability-50)*0.20);
+        score += points;
+        breakdown.push(`Reliability: ${points>=0?"+":""}${points} — BUYWISE evidence score ${product.reliability}/100`);
       }
       if(priority==="value"){
-        score += Math.round((product.value-50)*0.20);
-        breakdown.push("Value considered");
+        const points=Math.round((product.value-50)*0.20);
+        score += points;
+        breakdown.push(`Value: ${points>=0?"+":""}${points} — BUYWISE evidence score ${product.value}/100`);
       }
       if(priority==="features"){
-        score += Math.round((product.features-50)*0.18);
-        breakdown.push("Features considered");
+        const points=Math.round((product.features-50)*0.18);
+        score += points;
+        breakdown.push(`Features: ${points>=0?"+":""}${points} — BUYWISE evidence score ${product.features}/100`);
       }
       if(priority==="usability"){
-        score += Math.round((product.usability-50)*0.18);
-        breakdown.push("Ease of use considered");
+        const points=Math.round((product.usability-50)*0.18);
+        score += points;
+        breakdown.push(`Ease of use: ${points>=0?"+":""}${points} — BUYWISE evidence score ${product.usability}/100`);
       }
       if(priority==="efficiency"){
-        score += Math.round((product.efficiency-50)*0.20);
-        breakdown.push("Energy/water efficiency evidence considered");
+        const points=Math.round((product.efficiency-50)*0.20);
+        score += points;
+        breakdown.push(`Energy/water efficiency: ${points>=0?"+":""}${points} — BUYWISE evidence score ${product.efficiency}/100`);
       }
       if(priority==="capacity"){
-        score += Math.round((product.capacity-7)*3);
-        breakdown.push("Capacity considered");
+        const points=Math.round((product.capacity-7)*3);
+        score += points;
+        breakdown.push(`Capacity: ${points>=0?"+":""}${points} — ${product.capacity}kg capacity`);
       }
     });
 
     /* Everyday use is the default household use case. */
-    if(usage==="everyday") score += 4;
-    if(usage==="work") score += 2;
+    if(usage==="everyday"){
+      score += 4;
+      breakdown.push("Everyday use: +4 — household everyday-use adjustment");
+    }
+    if(usage==="work"){
+      score += 2;
+      breakdown.push("Work use: +2 — work-use adjustment");
+    }
 
     score=Math.max(0,Math.min(100,score));
 
@@ -603,38 +617,21 @@ if(isWashingMachine){
               <span class="badge">${index===0 ? "BUYWISE DECISION" : "ALTERNATIVE"}</span>
               <h3>${p.brand} ${p.model}</h3>
               <p>${p.name}</p>
-              <div class="price">$${p.price.toLocaleString()}</div>
+              <div class="price">Reference price: $${p.price.toLocaleString()}</div>
              <p class="small">
-  Observed at ${p.source} · ${p.rating}/5 from ${p.reviewCount} reviews<br>
-  Price checked: September 2026
+  Reference listing observed at ${p.source} · ${p.rating}/5 from ${p.reviewCount} reviews<br>
+  Price checked: September 2026<br>
+  <strong>Retailer price may differ when you open the product page.</strong>
 </p>
               <p><strong>BUYWISE Fit: ${p.result.score}/100</strong></p>
 
-     <div class="score-explanation">
-  <strong>Why BUYWISE chose this</strong>
-  <ul>
-    ${p.result.breakdown.map(item => {
-      let explanation = item;
-
-      explanation = explanation
-        .replace("💰 Within your stated budget: +5", "💰 Fits your stated budget")
-        .replace(/🛡 Reliability: \+12 — strong evidence/, "🛡 Reliability: strong supporting evidence")
-        .replace(/🛡 Reliability: \+8 — good evidence/, "🛡 Reliability: good supporting evidence")
-        .replace(/🛡 Reliability: \+4 — reasonable evidence/, "🛡 Reliability: reasonable supporting evidence")
-        .replace(/🛡 Reliability: \+0 — moderate evidence/, "🛡 Reliability: moderate supporting evidence")
-        .replace(/🛡 Reliability: -6 — weaker evidence/, "🛡 Reliability: weaker supporting evidence")
-        .replace(/💰 Value: \+12 — strong evidence/, "💰 Value: strong supporting evidence")
-        .replace(/💰 Value: \+8 — good evidence/, "💰 Value: good supporting evidence")
-        .replace(/💰 Value: \+4 — reasonable evidence/, "💰 Value: reasonable supporting evidence")
-        .replace(/⚡ Energy efficiency: \+12 — strong evidence/, "⚡ Energy efficiency: strong supporting evidence")
-        .replace(/⚡ Energy efficiency: \+8 — good evidence/, "⚡ Energy efficiency: good supporting evidence")
-        .replace(/⚡ Energy efficiency: \+4 — reasonable evidence/, "⚡ Energy efficiency: reasonable supporting evidence")
-        .replace(/🏠 Everyday-use suitability: \+3/, "🏠 Suitable for everyday use");
-
-      return `<li>${explanation.replace(/: \+[0-9]+|: -[0-9]+/g, "")}</li>`;
-    }).join("")}
-  </ul>
-</div>
+              <div class="score-explanation">
+                <strong>Why BUYWISE chose this</strong>
+                <ul>
+                  ${p.result.breakdown.map(item => `<li>${item}</li>`).join("")}
+                </ul>
+                <p class="small"><strong>Score calculation:</strong> starts at 50/100, then applies the adjustments above. Final BUYWISE Fit is ${p.result.score}/100.</p>
+              </div>
               <p>${p.result.evidence} Evidence confidence</p>
     
               <a href="${p.url}" target="_blank" rel="noopener noreferrer">
@@ -646,7 +643,7 @@ if(isWashingMachine){
 
         <p class="small" style="margin-top:22px">
           Prices and availability can change. BUYWISE Fit is separate from retailer relationships or affiliate commissions.
-          Product listings were researched from Australian retailer/manufacturer sources; the displayed price is an observed listing, not a guaranteed live price.
+          BUYWISE displays a reference price captured during research; it is not a guaranteed live retailer price. Always check the retailer page for the current price before buying.
         </p>
       </div>
     `;
