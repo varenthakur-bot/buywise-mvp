@@ -240,13 +240,14 @@ function showHomeQuestion(){
   const questions=[
 
     {
-      title:"What's your budget?",
-      text:"How much would you like to spend?",
+      title:"What's your price range?",
+      text:"Choose the price bracket you want BUYWISE to search within.",
       options:[
-        ["Under $300","300"],
-        ["$300 – $500","500"],
-        ["$500 – $1,000","1000"],
-        ["$1,000+","2000"]
+        ["Under $500","under500"],
+        ["$500 – $750","500to750"],
+        ["$750 – $1,000","750to1000"],
+        ["$1,000 – $1,500","1000to1500"],
+        ["$1,500+","over1500"]
       ]
     },
 
@@ -330,13 +331,7 @@ div.onclick=()=>{
   }
 
   answers[step]=option[1];
-  step++;
-
-  if(step<questions.length){
-    showHomeQuestion();
-  }else{
-    showHomeResult();
-  }
+  div.classList.add("selected");
 
 };
       
@@ -352,10 +347,17 @@ div.onclick=()=>{
   continueButton.style.marginTop="20px";
   continueButton.style.width="100%";
 
+  box.appendChild(continueButton);
+
   continueButton.onclick=()=>{
 
-    if(!answers[step] || answers[step].length===0){
-      alert("Please choose at least one priority.");
+    const currentAnswer=answers[step];
+    const hasAnswer = Array.isArray(currentAnswer)
+      ? currentAnswer.length > 0
+      : Boolean(currentAnswer);
+
+    if(!hasAnswer){
+      alert(q.multi ? "Please choose at least one priority." : "Please choose an option to continue.");
       return;
     }
 
@@ -669,7 +671,7 @@ if(isWashingMachine){
         <h3>Your requirements</h3>
         <p>
           <strong>Product:</strong> ${categoryName}<br>
-          <strong>Budget:</strong> $${budget.toLocaleString()}<br>
+          <strong>Price range:</strong> ${selectedRange ? selectedRange.label : "Not specified"}<br>
           <strong>Priority:</strong> ${priorities.length ? priorities.join(", ") : "Not specified"}<br>
           <strong>Usage:</strong> ${usage}
         </p>
