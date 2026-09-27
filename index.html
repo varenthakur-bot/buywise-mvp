@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">fff
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BUYWISE — Compare Less. Decide Wise.</title>
 <meta name="commission-factory-verification" content="3245527a705a4135813a22b59cb37c9b" />
@@ -10,7 +10,7 @@
 *{box-sizing:border-box}
 body{
   margin:0;
-  font-family:Arial,Helvetica,sans-serif;f
+  font-family:Arial,Helvetica,sans-serif;
   background:#f7f7f5;
   color:#171717
 }
@@ -54,20 +54,21 @@ input:focus{outline:none;border-color:#6d42ff}
 }
 .options{display:grid;gap:12px;margin:20px 0}
 .option{
-  padding:17px;
-  background:#f5f5f5;
-  border:2px solid transparent;
-  border-radius:14px;
-  cursor:pointer;
-  font-weight:600;
+  padding:17px;background:#f5f5f5;
+  border:2px solid transparent;border-radius:14px;
+  cursor:pointer;font-weight:600;
   color:#171717;
   text-align:left;
   width:100%;
 }
- .option:hover{border-color:#6d42ff}
-.option.selected{
-  border:2px solid #6d42ff;
-  background:#f0ebff;
+.option:hover{border-color:#6d42ff}
+.option.selected{border:2px solid #6d42ff;background:#f0ebff}
+.result.good{border-left:7px solid #22a06b}
+.result.warning{border-left:7px solid #e09b20}
+.result.bad{border-left:7px solid #d94a4a}
+.badge{
+  display:inline-block;padding:7px 12px;border-radius:30px;
+  background:#eee;font-size:13px;font-weight:700
 }
 .product-grid{
   display:grid;grid-template-columns:repeat(3,1fr);
@@ -241,7 +242,6 @@ function submitSearch(){
 function showHomeQuestion(){
 
   const questions=[
-
     {
       title:"What's your price range?",
       text:"Choose the price bracket you want BUYWISE to search within.",
@@ -253,21 +253,19 @@ function showHomeQuestion(){
         ["$1,500+","over1500"]
       ]
     },
-
-{
-  title:"What matters most to you?",
-  text:"Choose up to 3 priorities.",
-  multi:true,
-  options:[
-    ["Reliability","reliability"],
-    ["Best value","value"],
-    ["Features","features"],
-    ["Ease of use","usability"],
-    ["Energy efficiency","efficiency"],
-    ["Capacity","capacity"]
-  ]
-},
-
+    {
+      title:"What matters most to you?",
+      text:"Choose up to 3 priorities.",
+      multi:true,
+      options:[
+        ["Reliability","reliability"],
+        ["Best value","value"],
+        ["Features","features"],
+        ["Ease of use","usability"],
+        ["Energy efficiency","efficiency"],
+        ["Capacity","capacity"]
+      ]
+    },
     {
       title:"How will you mainly use it?",
       text:"Choose the option closest to your needs.",
@@ -278,102 +276,89 @@ function showHomeQuestion(){
         ["Entertainment","entertainment"]
       ]
     }
-
   ];
 
   const q=questions[step];
-
   document.getElementById("questionTitle").innerText=q.title;
-  document.getElementById("questionText").innerText=
-    "Shopping for: "+searchedProduct;
-
-  document.getElementById("progressBar").style.width=
-    ((step/questions.length)*100)+"%";
+  document.getElementById("questionText").innerText="Shopping for: "+searchedProduct;
+  document.getElementById("progressBar").style.width=((step/questions.length)*100)+"%";
 
   const box=document.getElementById("options");
   box.innerHTML="";
 
-  q.options.forEach(option=>{
-
-    const div=document.createElement("div");
-    div.className="option";
-    div.innerText=option[0];
-
-div.onclick=()=>{
-
   if(q.multi){
+    if(!Array.isArray(answers[step])) answers[step]=[];
 
-    if(!answers[step]){
-      answers[step]=[];
-    }
+    q.options.forEach(option=>{
+      const button=document.createElement("button");
+      button.type="button";
+      button.className="option";
+      button.innerText=option[0];
 
-    const selected=answers[step];
-    const value=option[1];
+      button.onclick=()=>{
+        const selected=answers[step];
+        const value=option[1];
+        const index=selected.indexOf(value);
 
-    if(selected.includes(value)){
+        if(index>-1){
+          selected.splice(index,1);
+          button.classList.remove("selected");
+        }else{
+          if(selected.length>=3){
+            alert("Please choose up to 3 priorities.");
+            return;
+          }
+          selected.push(value);
+          button.classList.add("selected");
+        }
+      };
 
-      answers[step]=selected.filter(item=>item!==value);
+      box.appendChild(button);
+    });
+  }else{
+    q.options.forEach(option=>{
+      const button=document.createElement("button");
+      button.type="button";
+      button.className="option";
+      button.innerText=option[0];
 
-      div.classList.remove("selected");
-      div.style.border="";
+      button.onclick=()=>{
+        answers[step]=option[1];
+        box.querySelectorAll(".option").forEach(b=>b.classList.remove("selected"));
+        button.classList.add("selected");
+      };
 
-    }else{
-
-      if(selected.length>=3){
-        alert("Please choose up to 3 priorities.");
-        return;
-      }
-
-      selected.push(value);
-
-      div.classList.add("selected");
-      div.style.border="2px solid #6d42ff";
-    }
-
-    return;
+      box.appendChild(button);
+    });
   }
 
-  answers[step]=option[1];
-  div.classList.add("selected");
-
-};
-      
-    box.appendChild(div);
-
-  });
-
   const continueButton=document.createElement("button");
-
+  continueButton.type="button";
   continueButton.className="primary";
   continueButton.innerText="Continue →";
-
   continueButton.style.marginTop="20px";
   continueButton.style.width="100%";
 
-  box.appendChild(continueButton);
-
   continueButton.onclick=()=>{
-
     const currentAnswer=answers[step];
-    const hasAnswer = Array.isArray(currentAnswer)
-      ? currentAnswer.length > 0
+    const hasAnswer=Array.isArray(currentAnswer)
+      ? currentAnswer.length>0
       : Boolean(currentAnswer);
 
     if(!hasAnswer){
-      alert(q.multi ? "Please choose at least one priority." : "Please choose an option to continue.");
+      alert(q.multi ? "Please choose at least one priority." : "Please select an option first.");
       return;
     }
 
     step++;
-
     if(step<questions.length){
       showHomeQuestion();
     }else{
       showHomeResult();
     }
-
   };
-  
+
+  box.appendChild(continueButton);
 }
 
 /* ---------------- HOME RESULT ---------------- */
@@ -533,12 +518,12 @@ if(isWashingMachine){
     let score=50;
     const breakdown=[];
 
-    if(product.price <= budget){
+    if(selectedPriceRange && product.price >= selectedPriceRange.min && product.price <= selectedPriceRange.max){
       score += 8;
-      breakdown.push("Within your stated budget");
+      breakdown.push("Within your selected price range");
     }else{
       score -= 18;
-      breakdown.push("Above your stated budget");
+      breakdown.push("Outside your selected price range");
     }
 
     priorities.forEach(priority=>{
@@ -674,7 +659,7 @@ if(isWashingMachine){
         <h3>Your requirements</h3>
         <p>
           <strong>Product:</strong> ${categoryName}<br>
-          <strong>Price range:</strong> ${selectedRange ? selectedRange.label : "Not specified"}<br>
+          <strong>Price range:</strong> ${selectedPriceRange ? selectedPriceRange.label : "Not specified"}<br>
           <strong>Priority:</strong> ${priorities.length ? priorities.join(", ") : "Not specified"}<br>
           <strong>Usage:</strong> ${usage}
         </p>
