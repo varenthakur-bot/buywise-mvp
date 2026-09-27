@@ -56,23 +56,9 @@ input:focus{outline:none;border-color:#6d42ff}
 .option{
   padding:17px;background:#f5f5f5;
   border:2px solid transparent;border-radius:14px;
-  cursor:pointer;font-weight:600;
-  color:#171717;
-  text-align:left;
-  width:100%;
+  cursor:pointer;font-weight:600
 }
 .option:hover{border-color:#6d42ff}
-.option.selected{border:2px solid #6d42ff;background:#f0ebff}
-.evidence-box{
-  margin:14px 0;
-  padding:14px 16px;
-  background:#f7f7f7;
-  border-radius:12px;
-  border:1px solid #e5e5e5;
-}
-.evidence-box ul{margin:8px 0 0 18px;padding:0}
-.evidence-box li{margin:5px 0}
-.evidence-box a{color:#6d42ff;font-weight:700;text-decoration:none}
 .result.good{border-left:7px solid #22a06b}
 .result.warning{border-left:7px solid #e09b20}
 .result.bad{border-left:7px solid #d94a4a}
@@ -94,6 +80,29 @@ footer{text-align:center;color:#777;padding:45px 0 20px;font-size:13px}
 @media(max-width:700px){
   .cards,.product-grid{grid-template-columns:1fr}
   .hero h1{font-size:40px}
+}
+
+.retailer-box{
+  margin-top:18px;padding:18px;border:1px solid #e5e5e5;
+  border-radius:16px;background:#fafafa
+}
+.retailer-box h4{margin:0 0 12px;font-size:16px}
+.retailer-row{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:12px 0;border-top:1px solid #e5e5e5
+}
+.retailer-row:first-of-type{border-top:0}
+.retailer-name{font-weight:700}
+.retailer-meta{font-size:12px;color:#666;margin-top:3px}
+.retailer-price{font-weight:800;font-size:18px;white-space:nowrap}
+.retailer-button{
+  display:inline-block;padding:9px 12px;border-radius:10px;
+  background:#171717;color:#fff;text-decoration:none;font-size:13px;font-weight:700;
+  white-space:nowrap
+}
+.retailer-button:hover{opacity:.88}
+@media(max-width:700px){
+  .retailer-row{align-items:flex-start;flex-wrap:wrap}
 }
 </style>
 </head>
@@ -252,30 +261,32 @@ function submitSearch(){
 function showHomeQuestion(){
 
   const questions=[
+
     {
-      title:"What's your price range?",
-      text:"Choose the price bracket you want BUYWISE to search within.",
+      title:"What's your budget?",
+      text:"How much would you like to spend?",
       options:[
-        ["Under $500","under500"],
-        ["$500 – $750","500to750"],
-        ["$750 – $1,000","750to1000"],
-        ["$1,000 – $1,500","1000to1500"],
-        ["$1,500+","over1500"]
+        ["Under $300","300"],
+        ["$300 – $500","500"],
+        ["$500 – $1,000","1000"],
+        ["$1,000+","2000"]
       ]
     },
-    {
-      title:"What matters most to you?",
-      text:"Choose up to 3 priorities.",
-      multi:true,
-      options:[
-        ["Reliability","reliability"],
-        ["Best value","value"],
-        ["Features","features"],
-        ["Ease of use","usability"],
-        ["Energy efficiency","efficiency"],
-        ["Capacity","capacity"]
-      ]
-    },
+
+{
+  title:"What matters most to you?",
+  text:"Choose up to 3 priorities.",
+  multi:true,
+  options:[
+    ["Reliability","reliability"],
+    ["Best value","value"],
+    ["Features","features"],
+    ["Ease of use","usability"],
+    ["Energy efficiency","efficiency"],
+    ["Capacity","capacity"]
+  ]
+},
+
     {
       title:"How will you mainly use it?",
       text:"Choose the option closest to your needs.",
@@ -286,89 +297,86 @@ function showHomeQuestion(){
         ["Entertainment","entertainment"]
       ]
     }
+
   ];
 
   const q=questions[step];
+
   document.getElementById("questionTitle").innerText=q.title;
-  document.getElementById("questionText").innerText="Shopping for: "+searchedProduct;
-  document.getElementById("progressBar").style.width=((step/questions.length)*100)+"%";
+  document.getElementById("questionText").innerText=
+    "Shopping for: "+searchedProduct;
+
+  document.getElementById("progressBar").style.width=
+    ((step/questions.length)*100)+"%";
 
   const box=document.getElementById("options");
   box.innerHTML="";
 
-  if(q.multi){
-    if(!Array.isArray(answers[step])) answers[step]=[];
+  q.options.forEach(option=>{
 
-    q.options.forEach(option=>{
-      const button=document.createElement("button");
-      button.type="button";
-      button.className="option";
-      button.innerText=option[0];
+    const div=document.createElement("div");
+    div.className="option";
+    div.innerText=option[0];
 
-      button.onclick=()=>{
+    div.onclick=()=>{
+
+      if(q.multi){
+        if(!answers[step]) answers[step]=[];
+
         const selected=answers[step];
         const value=option[1];
-        const index=selected.indexOf(value);
 
-        if(index>-1){
-          selected.splice(index,1);
-          button.classList.remove("selected");
+        if(selected.includes(value)){
+          answers[step]=selected.filter(item=>item!==value);
+          div.classList.remove("selected");
         }else{
           if(selected.length>=3){
             alert("Please choose up to 3 priorities.");
             return;
           }
           selected.push(value);
-          button.classList.add("selected");
+          div.classList.add("selected");
         }
-      };
+        return;
+      }
 
-      box.appendChild(button);
-    });
-  }else{
-    q.options.forEach(option=>{
-      const button=document.createElement("button");
-      button.type="button";
-      button.className="option";
-      button.innerText=option[0];
+      answers[step]=option[1];
+      step++;
 
-      button.onclick=()=>{
-        answers[step]=option[1];
-        box.querySelectorAll(".option").forEach(b=>b.classList.remove("selected"));
-        button.classList.add("selected");
-      };
+      if(step<questions.length){
+        showHomeQuestion();
+      }else{
+        showHomeResult();
+      }
+    };
 
-      box.appendChild(button);
-    });
+    box.appendChild(div);
+  });
+
+  if(q.multi){
+    const continueButton=document.createElement("button");
+    continueButton.className="primary";
+    continueButton.innerText="Continue →";
+    continueButton.style.marginTop="20px";
+    continueButton.style.width="100%";
+
+    continueButton.onclick=()=>{
+      if(!answers[step] || answers[step].length===0){
+        alert("Please choose at least one priority.");
+        return;
+      }
+
+      step++;
+      if(step<questions.length){
+        showHomeQuestion();
+      }else{
+        showHomeResult();
+      }
+    };
+
+    box.appendChild(continueButton);
   }
 
-  const continueButton=document.createElement("button");
-  continueButton.type="button";
-  continueButton.className="primary";
-  continueButton.innerText="Continue →";
-  continueButton.style.marginTop="20px";
-  continueButton.style.width="100%";
-
-  continueButton.onclick=()=>{
-    const currentAnswer=answers[step];
-    const hasAnswer=Array.isArray(currentAnswer)
-      ? currentAnswer.length>0
-      : Boolean(currentAnswer);
-
-    if(!hasAnswer){
-      alert(q.multi ? "Please choose at least one priority." : "Please select an option first.");
-      return;
-    }
-
-    step++;
-    if(step<questions.length){
-      showHomeQuestion();
-    }else{
-      showHomeResult();
-    }
-  };
-
-  box.appendChild(continueButton);
 }
 
 /* ---------------- HOME RESULT ---------------- */
@@ -378,15 +386,7 @@ function showHomeResult(){
   document.getElementById("questions").classList.add("hidden");
 
   const category = searchedProduct.toLowerCase();
-  const priceBracket = answers[0] || "";
-  const priceRanges = {
-    "under500": { min: 0, max: 500, label: "Under $500" },
-    "500to750": { min: 500, max: 750, label: "$500–$750" },
-    "750to1000": { min: 750, max: 1000, label: "$750–$1,000" },
-    "1000to1500": { min: 1000, max: 1500, label: "$1,000–$1,500" },
-    "over1500": { min: 1500, max: Infinity, label: "$1,500+" }
-  };
-  const selectedPriceRange = priceRanges[priceBracket] || null;
+  const budget = Number(answers[0] || 0);
   const priorities = Array.isArray(answers[1]) ? answers[1] : [answers[1]].filter(Boolean);
   const usage = answers[2] || "everyday";
 
@@ -449,52 +449,46 @@ if(isWashingMachine){
       price:512,
       capacity:8.5,
       rating:5.0,
-      reviewCount:1,
+      reviewCount:4,
       value:88,
       reliability:70,
       usability:78,
       efficiency:70,
       features:72,
       source:"Appliances Online",
-      url:"https://www.appliancesonline.com.au/product/chiq-85kg-front-load-washing-machine-wfl85plsw/",
-      evidenceSource:"https://www.appliancesonline.com.au/product/chiq-85kg-front-load-washing-machine-wfl85plsw/",
-      evidence:["8.5kg capacity","4-star energy rating","4.5-star water rating","3-year parts & labour warranty + 7 years motor parts"],
+      url:"https://www.appliancesonline.com.au/filter/washers-and-dryers/washing-machines/front-loading/"
     },
     {
       brand:"Westinghouse",
       name:"Westinghouse 8kg EasyCare 500 Front Load Washing Machine",
       model:"WWF8024M5WAS",
-      price:718,
+      price:594,
       capacity:8,
       rating:4.8,
-      reviewCount:672,
+      reviewCount:697,
       value:86,
       reliability:82,
       usability:84,
       efficiency:78,
       features:75,
       source:"Appliances Online",
-      url:"https://www.appliancesonline.com.au/product/westinghouse-easycare-500-8kg-front-load-washing-machine-wwf8024m5was/",
-      evidenceSource:"https://www.appliancesonline.com.au/product/westinghouse-easycare-500-8kg-front-load-washing-machine-wwf8024m5was/",
-      evidence:["8kg capacity","4-star energy rating","4.5-star water rating","2-year domestic warranty"],
+      url:"https://www.appliancesonline.com.au/filter/washers-and-dryers/washing-machines/"
     },
     {
       brand:"Bosch",
       name:"Bosch 8kg Series 4 Front Load Washing Machine",
       model:"WAN28288AU",
-      price:844,
+      price:840,
       capacity:8,
       rating:4.9,
-      reviewCount:47,
+      reviewCount:48,
       value:84,
       reliability:90,
       usability:84,
       efficiency:88,
       features:82,
       source:"Appliances Online",
-      url:"https://www.appliancesonline.com.au/product/bosch-series-4-8kg-front-load-washing-machine-wan28288au/",
-      evidenceSource:"https://www.appliancesonline.com.au/product/bosch-series-4-8kg-front-load-washing-machine-wan28288au/",
-      evidence:["8kg capacity","4.5-star energy rating","1400 rpm spin speed","2-year manufacturer warranty"],
+      url:"https://www.appliancesonline.com.au/filter/washers-and-dryers/washing-machines/front-loading/bosch/"
     },
     {
       brand:"LG",
@@ -510,27 +504,23 @@ if(isWashingMachine){
       efficiency:86,
       features:92,
       source:"Appliances Online",
-      url:"https://www.appliancesonline.com.au/product/lg-8kg-series-3-slim-front-load-washer-with-ai-wash-wx3-1208w/",
-      evidenceSource:"https://www.appliancesonline.com.au/product/lg-8kg-series-3-slim-front-load-washer-with-ai-wash-wx3-1208w/",
-      evidence:["8kg capacity","4.5-star energy rating","4-star water rating","2-year parts & labour warranty + 8 years motor parts"],
+      url:"https://www.appliancesonline.com.au/product/lg-8kg-series-3-slim-front-load-washer-with-ai-wash-wx3-1208w/"
     },
     {
       brand:"Fisher & Paykel",
       name:"Series 5 8kg Contemporary Front Loader Washer Auto Dose",
       model:"WH8060J5",
-      price:742,
+      price:950,
       capacity:8,
       rating:4.9,
-      reviewCount:111,
+      reviewCount:105,
       value:78,
       reliability:88,
       usability:92,
       efficiency:95,
       features:90,
       source:"Appliances Online",
-      url:"https://www.appliancesonline.com.au/product/fisher-paykel-series-5-8kg-contemporary-front-loader-washer-auto-dose/",
-      evidenceSource:"https://www.appliancesonline.com.au/product/fisher-paykel-series-5-8kg-contemporary-front-loader-washer-auto-dose/",
-      evidence:["8kg capacity","5-star energy rating","4.5-star water rating","Auto Dose and SmartHQ support","Quiet SmartDrive motor"],
+      url:"https://www.appliancesonline.com.au/product/fisher-paykel-series-5-8kg-contemporary-front-loader-washer-auto-dose/"
     }
   ];
 
@@ -538,58 +528,44 @@ if(isWashingMachine){
     let score=50;
     const breakdown=[];
 
-    /* BUYWISE starts every product at a neutral 50/100.
-       Each adjustment below is shown to the customer so the score is transparent. */
-    if(selectedPriceRange && product.price >= selectedPriceRange.min && product.price <= selectedPriceRange.max){
+    if(product.price <= budget){
       score += 8;
-      breakdown.push(`Price range: +8 — $${product.price.toLocaleString()} fits ${selectedPriceRange.label}`);
+      breakdown.push("Within your stated budget");
     }else{
       score -= 18;
-      breakdown.push(`Price range: -18 — $${product.price.toLocaleString()} is outside ${selectedPriceRange ? selectedPriceRange.label : "your selected range"}`);
+      breakdown.push("Above your stated budget");
     }
 
     priorities.forEach(priority=>{
       if(priority==="reliability"){
-        const points=Math.round((product.reliability-50)*0.20);
-        score += points;
-        breakdown.push(`Reliability: ${points>=0?"+":""}${points} — BUYWISE evidence score ${product.reliability}/100`);
+        score += Math.round((product.reliability-50)*0.20);
+        breakdown.push("Reliability evidence considered");
       }
       if(priority==="value"){
-        const points=Math.round((product.value-50)*0.20);
-        score += points;
-        breakdown.push(`Value: ${points>=0?"+":""}${points} — BUYWISE evidence score ${product.value}/100`);
+        score += Math.round((product.value-50)*0.20);
+        breakdown.push("Value considered");
       }
       if(priority==="features"){
-        const points=Math.round((product.features-50)*0.18);
-        score += points;
-        breakdown.push(`Features: ${points>=0?"+":""}${points} — BUYWISE evidence score ${product.features}/100`);
+        score += Math.round((product.features-50)*0.18);
+        breakdown.push("Features considered");
       }
       if(priority==="usability"){
-        const points=Math.round((product.usability-50)*0.18);
-        score += points;
-        breakdown.push(`Ease of use: ${points>=0?"+":""}${points} — BUYWISE evidence score ${product.usability}/100`);
+        score += Math.round((product.usability-50)*0.18);
+        breakdown.push("Ease of use considered");
       }
       if(priority==="efficiency"){
-        const points=Math.round((product.efficiency-50)*0.20);
-        score += points;
-        breakdown.push(`Energy/water efficiency: ${points>=0?"+":""}${points} — BUYWISE evidence score ${product.efficiency}/100`);
+        score += Math.round((product.efficiency-50)*0.20);
+        breakdown.push("Energy/water efficiency evidence considered");
       }
       if(priority==="capacity"){
-        const points=Math.round((product.capacity-7)*3);
-        score += points;
-        breakdown.push(`Capacity: ${points>=0?"+":""}${points} — ${product.capacity}kg capacity`);
+        score += Math.round((product.capacity-7)*3);
+        breakdown.push("Capacity considered");
       }
     });
 
     /* Everyday use is the default household use case. */
-    if(usage==="everyday"){
-      score += 4;
-      breakdown.push("Everyday use: +4 — household everyday-use adjustment");
-    }
-    if(usage==="work"){
-      score += 2;
-      breakdown.push("Work use: +2 — work-use adjustment");
-    }
+    if(usage==="everyday") score += 4;
+    if(usage==="work") score += 2;
 
     score=Math.max(0,Math.min(100,score));
 
@@ -599,10 +575,34 @@ if(isWashingMachine){
     return {score, breakdown, evidence};
   }
 
+  /* ---------------- WHERE TO BUY ----------------
+     Retailer offers are kept separate from BUYWISE Fit.
+     Prices below are observed listings and can change.
+     Affiliate tracking links can be inserted per retailer once approved.
+  --------------------------------------------------------------- */
+  function retailerOffers(product){
+    const offers={
+      "WAN28288AU":[
+        {retailer:"Appliances Online",price:844,checked:"Sep 2026",url:"https://www.appliancesonline.com.au/product/bosch-series-4-8kg-front-load-washing-machine-wan28288au/"},
+        {retailer:"The Good Guys",price:899,checked:"Sep 2026",url:"https://www.thegoodguys.com.au/bosch-8kg-front-load-washer-wan28288au"},
+        {retailer:"Bing Lee",price:893,checked:"Sep 2026",url:"https://www.binglee.com.au/products/wht-8kg-s4-washing-machine-2bs-wan28288au"}
+      ],
+      "WX3-1208W":[
+        {retailer:"The Good Guys",price:699,checked:"Sep 2026",url:"https://www.thegoodguys.com.au/lg-8kg-series-3-slim-ai-front-load-washer-wx3-1208w"},
+        {retailer:"Appliances Online",price:826,checked:"Sep 2026",url:"https://www.appliancesonline.com.au/product/lg-8kg-series-3-slim-front-load-washer-with-ai-wash-wx3-1208w/"},
+        {retailer:"JB Hi-Fi",price:799,checked:"Sep 2026",url:"https://www.jbhifi.com.au/products/lg-wx3-1208w-series-3-8kg-ai-compact-front-load-washer"}
+      ],
+      "WH8060J5":[
+        {retailer:"Appliances Online",price:742,checked:"Sep 2026",url:"https://www.appliancesonline.com.au/product/fisher-paykel-series-5-8kg-contemporary-front-loader-washer-auto-dose/"},
+        {retailer:"Betta",price:899,checked:"Sep 2026",url:"https://www.betta.com.au/products/fisher-paykel-8kg-smart-front-load-washing-machine-white-series-5-contemporary-874687"},
+        {retailer:"Harvey Norman",price:899,checked:"Sep 2026",url:"https://www.harveynorman.com.au/fisher-and-paykel-8kg-series-5-contemporary-auto-dose-front-load-washing-machine-white.html"}
+      ]
+    };
+    return (offers[product.model] || []).slice().sort((a,b)=>a.price-b.price);
+  }
+
   if(isWashingMachine){
-    const eligible = selectedPriceRange
-      ? washingMachines.filter(p => p.price >= selectedPriceRange.min && p.price <= selectedPriceRange.max)
-      : washingMachines;
+    const eligible = washingMachines.filter(p=>p.price <= budget);
     const ranked = (eligible.length ? eligible : washingMachines)
       .map(p=>({...p, result:scoreWashingMachine(p)}))
       .sort((a,b)=>b.result.score-a.result.score)
@@ -614,12 +614,12 @@ if(isWashingMachine){
       <div class="result">
         <span class="badge">BUYWISE DECISION ENGINE</span>
         <h1>Your Washing Machine Decision</h1>
-        <p>We matched your requirements against a research-backed Australian product set.</p>
+        <p>We matched your requirements against a small live-tested Australian product set.</p>
 
         <h3>Your requirements</h3>
         <p>
           <strong>Product:</strong> Washing Machine<br>
-          <strong>Price range:</strong> ${selectedPriceRange ? selectedPriceRange.label : "Not specified"}<br>
+          <strong>Budget:</strong> $${budget.toLocaleString()}<br>
           <strong>Priorities:</strong> ${priorities.length ? priorities.join(", ") : "Not specified"}<br>
           <strong>Usage:</strong> ${usage}
         </p>
@@ -637,29 +637,52 @@ if(isWashingMachine){
               <span class="badge">${index===0 ? "BUYWISE DECISION" : "ALTERNATIVE"}</span>
               <h3>${p.brand} ${p.model}</h3>
               <p>${p.name}</p>
-              <div class="price">Reference price: $${p.price.toLocaleString()}</div>
+              <div class="price">BUYWISE Fit: ${p.result.score}/100</div>
              <p class="small">
-  Reference listing observed at ${p.source} · ${p.rating}/5 from ${p.reviewCount} reviews<br>
-  Price checked: September 2026<br>
-  <strong>Retailer price may differ when you open the product page.</strong>
+  Product evidence from ${p.source} · ${p.rating}/5 from ${p.reviewCount} reviews<br>
+  Retailer prices shown below are observed listings and may change.
 </p>
-              <div class="evidence-box">
-                <strong>Product evidence</strong>
-                <ul>
-                  ${p.evidence.map(item => `<li>${item}</li>`).join("")}
-                </ul>
-                <p class="small"><a href="${p.evidenceSource}" target="_blank" rel="noopener noreferrer">View product evidence source →</a></p>
+              <div class="retailer-box">
+                <h4>Where to buy this exact model</h4>
+                ${retailerOffers(p).length ? retailerOffers(p).map((offer,offerIndex)=>`
+                  <div class="retailer-row">
+                    <div>
+                      <div class="retailer-name">${offer.retailer}${offerIndex===0 ? " · lowest observed price" : ""}</div>
+                      <div class="retailer-meta">Price checked ${offer.checked} · retailer price may change</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <span class="retailer-price">$${offer.price.toLocaleString()}</span>
+                      <a class="retailer-button" href="${offer.url}" target="_blank" rel="noopener noreferrer">View retailer →</a>
+                    </div>
+                  </div>
+                `).join("") : `<p class="small">Retailer offers are being added for this model.</p>`}
               </div>
 
-              <p><strong>BUYWISE Fit: ${p.result.score}/100</strong></p>
+     <div class="score-explanation">
+  <strong>Why BUYWISE chose this</strong>
+  <ul>
+    ${p.result.breakdown.map(item => {
+      let explanation = item;
 
-              <div class="score-explanation">
-                <strong>Why BUYWISE chose this</strong>
-                <ul>
-                  ${p.result.breakdown.map(item => `<li>${item}</li>`).join("")}
-                </ul>
-                <p class="small"><strong>Score calculation:</strong> starts at 50/100, then applies the adjustments above. Final BUYWISE Fit is ${p.result.score}/100.</p>
-              </div>
+      explanation = explanation
+        .replace("💰 Within your stated budget: +5", "💰 Fits your stated budget")
+        .replace(/🛡 Reliability: \+12 — strong evidence/, "🛡 Reliability: strong supporting evidence")
+        .replace(/🛡 Reliability: \+8 — good evidence/, "🛡 Reliability: good supporting evidence")
+        .replace(/🛡 Reliability: \+4 — reasonable evidence/, "🛡 Reliability: reasonable supporting evidence")
+        .replace(/🛡 Reliability: \+0 — moderate evidence/, "🛡 Reliability: moderate supporting evidence")
+        .replace(/🛡 Reliability: -6 — weaker evidence/, "🛡 Reliability: weaker supporting evidence")
+        .replace(/💰 Value: \+12 — strong evidence/, "💰 Value: strong supporting evidence")
+        .replace(/💰 Value: \+8 — good evidence/, "💰 Value: good supporting evidence")
+        .replace(/💰 Value: \+4 — reasonable evidence/, "💰 Value: reasonable supporting evidence")
+        .replace(/⚡ Energy efficiency: \+12 — strong evidence/, "⚡ Energy efficiency: strong supporting evidence")
+        .replace(/⚡ Energy efficiency: \+8 — good evidence/, "⚡ Energy efficiency: good supporting evidence")
+        .replace(/⚡ Energy efficiency: \+4 — reasonable evidence/, "⚡ Energy efficiency: reasonable supporting evidence")
+        .replace(/🏠 Everyday-use suitability: \+3/, "🏠 Suitable for everyday use");
+
+      return `<li>${explanation.replace(/: \+[0-9]+|: -[0-9]+/g, "")}</li>`;
+    }).join("")}
+  </ul>
+</div>
               <p>${p.result.evidence} Evidence confidence</p>
     
               <a href="${p.url}" target="_blank" rel="noopener noreferrer">
@@ -670,8 +693,9 @@ if(isWashingMachine){
         </div>
 
         <p class="small" style="margin-top:22px">
-          Prices and availability can change. BUYWISE Fit is separate from retailer relationships or affiliate commissions.
-          BUYWISE displays a reference price captured during research; it is not a guaranteed live retailer price. Always check the retailer page for the current price before buying.
+          Prices and availability can change. BUYWISE Fit is calculated independently of retailer relationships or affiliate commissions.
+          Retailer links currently use direct retailer pages; approved affiliate tracking will be connected retailer-by-retailer when available.
+          Displayed retailer prices are observed listings, not guaranteed live prices.
         </p>
       </div>
     `;
@@ -684,7 +708,7 @@ if(isWashingMachine){
         <h3>Your requirements</h3>
         <p>
           <strong>Product:</strong> ${categoryName}<br>
-          <strong>Price range:</strong> ${selectedPriceRange ? selectedPriceRange.label : "Not specified"}<br>
+          <strong>Budget:</strong> $${budget.toLocaleString()}<br>
           <strong>Priority:</strong> ${priorities.length ? priorities.join(", ") : "Not specified"}<br>
           <strong>Usage:</strong> ${usage}
         </p>
@@ -705,14 +729,13 @@ if(isWashingMachine){
 const businessQuestions=[
 
   {
-    title:"What price range are you looking at?",
-    text:"Choose the price bracket you want BUYWISE to search within.",
+    title:"What's your budget?",
+    text:"How much are you comfortable spending?",
     options:[
-      ["Under $500","under500"],
-      ["$500 – $750","500to750"],
-      ["$750 – $1,000","750to1000"],
-      ["$1,000 – $1,500","1000to1500"],
-      ["$1,500+","over1500"]
+      ["$500 or less","500"],
+      ["$501 – $800","800"],
+      ["$801 – $1,000","1000"],
+      ["Over $1,000","1500"]
     ]
   },
 
@@ -1560,6 +1583,29 @@ durabilityScore:85,
 #buywiseContinue:disabled{
   opacity:0.4;
   cursor:not-allowed;
+}
+
+.retailer-box{
+  margin-top:18px;padding:18px;border:1px solid #e5e5e5;
+  border-radius:16px;background:#fafafa
+}
+.retailer-box h4{margin:0 0 12px;font-size:16px}
+.retailer-row{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:12px 0;border-top:1px solid #e5e5e5
+}
+.retailer-row:first-of-type{border-top:0}
+.retailer-name{font-weight:700}
+.retailer-meta{font-size:12px;color:#666;margin-top:3px}
+.retailer-price{font-weight:800;font-size:18px;white-space:nowrap}
+.retailer-button{
+  display:inline-block;padding:9px 12px;border-radius:10px;
+  background:#171717;color:#fff;text-decoration:none;font-size:13px;font-weight:700;
+  white-space:nowrap
+}
+.retailer-button:hover{opacity:.88}
+@media(max-width:700px){
+  .retailer-row{align-items:flex-start;flex-wrap:wrap}
 }
 </style>
 
