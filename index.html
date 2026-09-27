@@ -63,6 +63,16 @@ input:focus{outline:none;border-color:#6d42ff}
 }
 .option:hover{border-color:#6d42ff}
 .option.selected{border:2px solid #6d42ff;background:#f0ebff}
+.evidence-box{
+  margin:14px 0;
+  padding:14px 16px;
+  background:#f7f7f7;
+  border-radius:12px;
+  border:1px solid #e5e5e5;
+}
+.evidence-box ul{margin:8px 0 0 18px;padding:0}
+.evidence-box li{margin:5px 0}
+.evidence-box a{color:#6d42ff;font-weight:700;text-decoration:none}
 .result.good{border-left:7px solid #22a06b}
 .result.warning{border-left:7px solid #e09b20}
 .result.bad{border-left:7px solid #d94a4a}
@@ -439,46 +449,52 @@ if(isWashingMachine){
       price:512,
       capacity:8.5,
       rating:5.0,
-      reviewCount:4,
+      reviewCount:1,
       value:88,
       reliability:70,
       usability:78,
       efficiency:70,
       features:72,
       source:"Appliances Online",
-      url:"https://www.appliancesonline.com.au/filter/washers-and-dryers/washing-machines/front-loading/"
+      url:"https://www.appliancesonline.com.au/product/chiq-85kg-front-load-washing-machine-wfl85plsw/",
+      evidenceSource:"https://www.appliancesonline.com.au/product/chiq-85kg-front-load-washing-machine-wfl85plsw/",
+      evidence:["8.5kg capacity","4-star energy rating","4.5-star water rating","3-year parts & labour warranty + 7 years motor parts"],
     },
     {
       brand:"Westinghouse",
       name:"Westinghouse 8kg EasyCare 500 Front Load Washing Machine",
       model:"WWF8024M5WAS",
-      price:594,
+      price:718,
       capacity:8,
       rating:4.8,
-      reviewCount:697,
+      reviewCount:672,
       value:86,
       reliability:82,
       usability:84,
       efficiency:78,
       features:75,
       source:"Appliances Online",
-      url:"https://www.appliancesonline.com.au/filter/washers-and-dryers/washing-machines/"
+      url:"https://www.appliancesonline.com.au/product/westinghouse-easycare-500-8kg-front-load-washing-machine-wwf8024m5was/",
+      evidenceSource:"https://www.appliancesonline.com.au/product/westinghouse-easycare-500-8kg-front-load-washing-machine-wwf8024m5was/",
+      evidence:["8kg capacity","4-star energy rating","4.5-star water rating","2-year domestic warranty"],
     },
     {
       brand:"Bosch",
       name:"Bosch 8kg Series 4 Front Load Washing Machine",
       model:"WAN28288AU",
-      price:840,
+      price:844,
       capacity:8,
       rating:4.9,
-      reviewCount:48,
+      reviewCount:47,
       value:84,
       reliability:90,
       usability:84,
       efficiency:88,
       features:82,
       source:"Appliances Online",
-      url:"https://www.appliancesonline.com.au/filter/washers-and-dryers/washing-machines/front-loading/bosch/"
+      url:"https://www.appliancesonline.com.au/product/bosch-series-4-8kg-front-load-washing-machine-wan28288au/",
+      evidenceSource:"https://www.appliancesonline.com.au/product/bosch-series-4-8kg-front-load-washing-machine-wan28288au/",
+      evidence:["8kg capacity","4.5-star energy rating","1400 rpm spin speed","2-year manufacturer warranty"],
     },
     {
       brand:"LG",
@@ -494,23 +510,27 @@ if(isWashingMachine){
       efficiency:86,
       features:92,
       source:"Appliances Online",
-      url:"https://www.appliancesonline.com.au/product/lg-8kg-series-3-slim-front-load-washer-with-ai-wash-wx3-1208w/"
+      url:"https://www.appliancesonline.com.au/product/lg-8kg-series-3-slim-front-load-washer-with-ai-wash-wx3-1208w/",
+      evidenceSource:"https://www.appliancesonline.com.au/product/lg-8kg-series-3-slim-front-load-washer-with-ai-wash-wx3-1208w/",
+      evidence:["8kg capacity","4.5-star energy rating","4-star water rating","2-year parts & labour warranty + 8 years motor parts"],
     },
     {
       brand:"Fisher & Paykel",
       name:"Series 5 8kg Contemporary Front Loader Washer Auto Dose",
       model:"WH8060J5",
-      price:950,
+      price:742,
       capacity:8,
       rating:4.9,
-      reviewCount:105,
+      reviewCount:111,
       value:78,
       reliability:88,
       usability:92,
       efficiency:95,
       features:90,
       source:"Appliances Online",
-      url:"https://www.appliancesonline.com.au/product/fisher-paykel-series-5-8kg-contemporary-front-loader-washer-auto-dose/"
+      url:"https://www.appliancesonline.com.au/product/fisher-paykel-series-5-8kg-contemporary-front-loader-washer-auto-dose/",
+      evidenceSource:"https://www.appliancesonline.com.au/product/fisher-paykel-series-5-8kg-contemporary-front-loader-washer-auto-dose/",
+      evidence:["8kg capacity","5-star energy rating","4.5-star water rating","Auto Dose and SmartHQ support","Quiet SmartDrive motor"],
     }
   ];
 
@@ -594,7 +614,7 @@ if(isWashingMachine){
       <div class="result">
         <span class="badge">BUYWISE DECISION ENGINE</span>
         <h1>Your Washing Machine Decision</h1>
-        <p>We matched your requirements against a small live-tested Australian product set.</p>
+        <p>We matched your requirements against a research-backed Australian product set.</p>
 
         <h3>Your requirements</h3>
         <p>
@@ -623,6 +643,14 @@ if(isWashingMachine){
   Price checked: September 2026<br>
   <strong>Retailer price may differ when you open the product page.</strong>
 </p>
+              <div class="evidence-box">
+                <strong>Product evidence</strong>
+                <ul>
+                  ${p.evidence.map(item => `<li>${item}</li>`).join("")}
+                </ul>
+                <p class="small"><a href="${p.evidenceSource}" target="_blank" rel="noopener noreferrer">View product evidence source →</a></p>
+              </div>
+
               <p><strong>BUYWISE Fit: ${p.result.score}/100</strong></p>
 
               <div class="score-explanation">
