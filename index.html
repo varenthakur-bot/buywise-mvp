@@ -59,8 +59,13 @@ input:focus{outline:none;border-color:#6d42ff}
   cursor:pointer;font-weight:600;color:#171717;
   text-align:left;width:100%;font-family:inherit;font-size:16px;
   appearance:none;-webkit-appearance:none;
+  display:block;position:relative;z-index:2;pointer-events:auto;
 }
 .option:hover{border-color:#6d42ff}
+.option.selected{
+  border-color:#6d42ff;
+  background:#f0ebff;
+}
 .result.good{border-left:7px solid #22a06b}
 .result.warning{border-left:7px solid #e09b20}
 .result.bad{border-left:7px solid #d94a4a}
@@ -263,7 +268,6 @@ function submitSearch(){
 function showHomeQuestion(){
 
   const questions=[
-
     {
       title:"What's your budget?",
       text:"How much would you like to spend?",
@@ -275,21 +279,19 @@ function showHomeQuestion(){
         ["$1,500+","3000"]
       ]
     },
-
-{
-  title:"What matters most to you?",
-  text:"Choose up to 3 priorities.",
-  multi:true,
-  options:[
-    ["Reliability","reliability"],
-    ["Best value","value"],
-    ["Features","features"],
-    ["Ease of use","usability"],
-    ["Energy efficiency","efficiency"],
-    ["Capacity","capacity"]
-  ]
-},
-
+    {
+      title:"What matters most to you?",
+      text:"Choose up to 3 priorities.",
+      multi:true,
+      options:[
+        ["Reliability","reliability"],
+        ["Best value","value"],
+        ["Features","features"],
+        ["Ease of use","usability"],
+        ["Energy efficiency","efficiency"],
+        ["Capacity","capacity"]
+      ]
+    },
     {
       title:"How will you mainly use it?",
       text:"Choose the option closest to your needs.",
@@ -300,7 +302,6 @@ function showHomeQuestion(){
         ["Entertainment","entertainment"]
       ]
     }
-
   ];
 
   const q=questions[step];
@@ -315,32 +316,35 @@ function showHomeQuestion(){
   const box=document.getElementById("options");
   box.innerHTML="";
 
-  q.options.forEach(option=>{
+  q.options.forEach((option,index)=>{
+    const button=document.createElement("button");
+    button.type="button";
+    button.className="option";
+    button.dataset.value=option[1];
+    button.innerText=option[0];
 
-    const div=document.createElement("button");
-    div.type="button";
-    div.className="option";
-    div.innerText=option[0];
-
-    div.onclick=()=>{
+    button.addEventListener("click",function(event){
+      event.preventDefault();
+      event.stopPropagation();
 
       if(q.multi){
-        if(!answers[step]) answers[step]=[];
-
+        if(!Array.isArray(answers[step])) answers[step]=[];
         const selected=answers[step];
         const value=option[1];
 
         if(selected.includes(value)){
           answers[step]=selected.filter(item=>item!==value);
-          div.classList.remove("selected");
-        }else{
-          if(selected.length>=3){
-            alert("Please choose up to 3 priorities.");
-            return;
-          }
-          selected.push(value);
-          div.classList.add("selected");
+          button.classList.remove("selected");
+          return;
         }
+
+        if(selected.length>=3){
+          alert("Please choose up to 3 priorities.");
+          return;
+        }
+
+        selected.push(value);
+        button.classList.add("selected");
         return;
       }
 
@@ -352,20 +356,24 @@ function showHomeQuestion(){
       }else{
         showHomeResult();
       }
-    };
+    });
 
-    box.appendChild(div);
+    box.appendChild(button);
   });
 
   if(q.multi){
     const continueButton=document.createElement("button");
+    continueButton.type="button";
     continueButton.className="primary";
     continueButton.innerText="Continue →";
     continueButton.style.marginTop="20px";
     continueButton.style.width="100%";
 
-    continueButton.onclick=()=>{
-      if(!answers[step] || answers[step].length===0){
+    continueButton.addEventListener("click",function(event){
+      event.preventDefault();
+      event.stopPropagation();
+
+      if(!Array.isArray(answers[step]) || answers[step].length===0){
         alert("Please choose at least one priority.");
         return;
       }
@@ -376,12 +384,13 @@ function showHomeQuestion(){
       }else{
         showHomeResult();
       }
-    };
+    });
 
     box.appendChild(continueButton);
   }
 
 }
+
 
 /* ---------------- HOME RESULT ---------------- */
 
@@ -816,8 +825,9 @@ function showBusinessQuestion(){
 
     q.options.forEach(option=>{
 
-      const div=document.createElement("div");
+      const div=document.createElement("button");
 
+      div.type="button";
       div.className="option";
       div.innerText="☐ "+option[0];
 
@@ -829,6 +839,7 @@ function showBusinessQuestion(){
 
           selected.splice(index,1);
           div.innerText="☐ "+option[0];
+          div.classList.remove("selected");
 
         }else{
 
@@ -839,6 +850,7 @@ function showBusinessQuestion(){
 
           selected.push(option[1]);
           div.innerText="☑ "+option[0];
+          div.classList.add("selected");
         }
 
       };
@@ -880,8 +892,9 @@ function showBusinessQuestion(){
 
   q.options.forEach(option=>{
 
-    const div=document.createElement("div");
+    const div=document.createElement("button");
 
+    div.type="button";
     div.className="option";
     div.innerText=option[0];
 
