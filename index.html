@@ -229,6 +229,49 @@ let mode="";
 let step=0;
 let answers={};
 let searchedProduct="";
+/* ---------------- RETAILER LINK CONFIG ---------------- */
+
+const retailerConfig = {
+  "Appliances Online": {
+    approved: false,
+    affiliateUrl: ""
+  },
+
+  "The Good Guys": {
+    approved: false,
+    affiliateUrl: ""
+  },
+
+  "Bing Lee": {
+    approved: false,
+    affiliateUrl: ""
+  },
+
+  "JB Hi-Fi": {
+    approved: false,
+    affiliateUrl: ""
+  },
+
+  "Harvey Norman": {
+    approved: false,
+    affiliateUrl: ""
+  },
+
+  "Betta": {
+    approved: false,
+    affiliateUrl: ""
+  }
+};
+
+function getRetailerUrl(offer){
+  const config = retailerConfig[offer.retailer];
+
+  if(config && config.approved && config.affiliateUrl){
+    return config.affiliateUrl;
+  }
+
+  return offer.url;
+}
 
 
 /* ---------------- HOME SEARCH ---------------- */
@@ -665,7 +708,7 @@ if(isWashingMachine){
                     </div>
                     <div style="display:flex;align-items:center;gap:10px">
                       <span class="retailer-price">$${offer.price.toLocaleString()}</span>
-                      <a class="retailer-button" href="${offer.url}" target="_blank" rel="noopener noreferrer">View retailer →</a>
+                     <a class="retailer-button" href="${getRetailerUrl(offer)}" target="_blank" rel="noopener noreferrer">View retailer →</a>
                     </div>
                   </div>
                 `).join("") : `<p class="small">Retailer offers are being added for this model.</p>`}
