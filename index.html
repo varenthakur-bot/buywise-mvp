@@ -229,47 +229,22 @@ let mode="";
 let step=0;
 let answers={};
 let searchedProduct="";
+
 /* ---------------- RETAILER LINK CONFIG ---------------- */
-
 const retailerConfig = {
-  "Appliances Online": {
-    approved: false,
-    affiliateUrl: ""
-  },
-
-  "The Good Guys": {
-    approved: false,
-    affiliateUrl: ""
-  },
-
-  "Bing Lee": {
-    approved: false,
-    affiliateUrl: ""
-  },
-
-  "JB Hi-Fi": {
-    approved: false,
-    affiliateUrl: ""
-  },
-
-  "Harvey Norman": {
-    approved: false,
-    affiliateUrl: ""
-  },
-
-  "Betta": {
-    approved: false,
-    affiliateUrl: ""
-  }
+  "Appliances Online": { approved:false, affiliateUrl:"" },
+  "The Good Guys": { approved:false, affiliateUrl:"" },
+  "Bing Lee": { approved:false, affiliateUrl:"" },
+  "JB Hi-Fi": { approved:false, affiliateUrl:"" },
+  "Harvey Norman": { approved:false, affiliateUrl:"" },
+  "Betta": { approved:false, affiliateUrl:"" }
 };
 
 function getRetailerUrl(offer){
   const config = retailerConfig[offer.retailer];
-
   if(config && config.approved && config.affiliateUrl){
     return config.affiliateUrl;
   }
-
   return offer.url;
 }
 
@@ -443,6 +418,17 @@ function showHomeResult(){
 
   const category = searchedProduct.toLowerCase();
   const budget = Number(answers[0] || 0);
+
+  /* Selected price bracket — products must stay inside this range. */
+  const budgetBrackets = {
+    500:  { min: 0,    max: 499.99, label: "Under $500" },
+    750:  { min: 500,  max: 750,    label: "$500 – $750" },
+    1000: { min: 750.01, max: 1000, label: "$750 – $1,000" },
+    1500: { min: 1000.01, max: 1500, label: "$1,000 – $1,500" },
+    3000: { min: 1500.01, max: Infinity, label: "$1,500+" }
+  };
+
+  const selectedBudget = budgetBrackets[budget] || { min: 0, max: budget, label: "$" + budget.toLocaleString() };
   const priorities = Array.isArray(answers[1]) ? answers[1] : [answers[1]].filter(Boolean);
   const usage = answers[2] || "everyday";
 
@@ -584,7 +570,7 @@ if(isWashingMachine){
     let score=50;
     const breakdown=[];
 
-    if(product.price <= budget){
+    if(product.price >= selectedBudget.min && product.price <= selectedBudget.max){
       score += 8;
       breakdown.push("Within your stated budget");
     }else{
@@ -658,8 +644,10 @@ if(isWashingMachine){
   }
 
   if(isWashingMachine){
-    const eligible = washingMachines.filter(p=>p.price <= budget);
-    const ranked = (eligible.length ? eligible : washingMachines)
+    const eligible = washingMachines.filter(
+      p => p.price >= selectedBudget.min && p.price <= selectedBudget.max
+    );
+    const ranked = eligible
       .map(p=>({...p, result:scoreWashingMachine(p)}))
       .sort((a,b)=>b.result.score-a.result.score)
       .slice(0,3);
@@ -675,15 +663,15 @@ if(isWashingMachine){
         <h3>Your requirements</h3>
         <p>
           <strong>Product:</strong> Washing Machine<br>
-          <strong>Budget:</strong> $${budget.toLocaleString()}<br>
+          <strong>Price range:</strong> ${selectedBudget.label}<br>
           <strong>Priorities:</strong> ${priorities.length ? priorities.join(", ") : "Not specified"}<br>
           <strong>Usage:</strong> ${usage}
         </p>
 
         ${!withinBudget ? `
           <div class="card">
-            <strong>⚠️ Nothing in our current product set is within your stated budget.</strong>
-            <p class="small">We are showing the closest available options instead. This is not a recommendation to exceed your budget.</p>
+            <strong>⚠️ Nothing in our current product set is within your selected price range.</strong>
+            <p class="small">BUYWISE will not show products outside the selected range.</p>
           </div>
         ` : ""}
 
@@ -694,6 +682,7 @@ if(isWashingMachine){
               <h3>${p.brand} ${p.model}</h3>
               <p>${p.name}</p>
               <div class="price">BUYWISE Fit: ${p.result.score}/100</div>
+              <p class="small"><strong>Reference price: $${p.price.toLocaleString()}</strong></p>
              <p class="small">
   Product evidence from ${p.source} · ${p.rating}/5 from ${p.reviewCount} reviews<br>
   Retailer prices shown below are observed listings and may change.
@@ -708,7 +697,7 @@ if(isWashingMachine){
                     </div>
                     <div style="display:flex;align-items:center;gap:10px">
                       <span class="retailer-price">$${offer.price.toLocaleString()}</span>
-                     <a class="retailer-button" href="${getRetailerUrl(offer)}" target="_blank" rel="noopener noreferrer">View retailer →</a>
+                      <a class="retailer-button" href="${getRetailerUrl(offer)}" target="_blank" rel="noopener noreferrer">View retailer →</a>
                     </div>
                   </div>
                 `).join("") : `<p class="small">Retailer offers are being added for this model.</p>`}
