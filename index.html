@@ -230,22 +230,43 @@ let step=0;
 let answers={};
 let searchedProduct="";
 
-/* ---------------- RETAILER LINK CONFIG ---------------- */
-const retailerConfig = {
-  "Appliances Online": { approved:false, affiliateUrl:"" },
-  "The Good Guys": { approved:false, affiliateUrl:"" },
-  "Bing Lee": { approved:false, affiliateUrl:"" },
-  "JB Hi-Fi": { approved:false, affiliateUrl:"" },
-  "Harvey Norman": { approved:false, affiliateUrl:"" },
-  "Betta": { approved:false, affiliateUrl:"" }
-};
-
 function getRetailerUrl(offer){
-  const config = retailerConfig[offer.retailer];
-  if(config && config.approved && config.affiliateUrl){
-    return config.affiliateUrl;
+  return offer.affiliateUrl || offer.url;
+}
+
+function trackRetailerClick(retailer, model){
+  if(Array.isArray(window.dataLayer)){
+    window.dataLayer.push({
+      event:"buywise_retailer_click",
+      retailer,
+      product_model:model
+    });
   }
-  return offer.url;
+}
+
+document.addEventListener("click", event=>{
+  const link = event.target.closest("a[data-retailer]");
+  if(!link) return;
+  trackRetailerClick(link.dataset.retailer, link.dataset.model);
+});
+
+function buildShoppingUrl(engine, query){
+  const q = encodeURIComponent(query);
+  if(engine === "Google Shopping") return `https://www.google.com/search?tbm=shop&q=${q}`;
+  if(engine === "Bing Shopping") return `https://www.bing.com/shop?q=${q}`;
+  return `https://www.google.com/search?q=${q}`;
+}
+
+function escapeHtml(value){
+  return String(value).replace(/[&<>"']/g, character => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#39;"
+  })[character]);
+}
+
+function hasAffiliateLinks(products, getOffers){
+  return products.some(product =>
+    getOffers(product).some(offer => Boolean(offer.affiliateUrl))
+  );
 }
 
 
@@ -649,6 +670,13 @@ if(isWashingMachine){
     return (offers[product.model] || []).slice().sort((a,b)=>a.price-b.price);
   }
 
+  function primaryRetailerOffer(product){
+    return retailerOffers(product)[0] || {
+      retailer:product.source,
+      url:product.url
+    };
+  }
+
   if(isWashingMachine){
     const eligible = washingMachines.filter(
       p => p.price >= selectedBudget.min && p.price <= selectedBudget.max
@@ -664,7 +692,7 @@ if(isWashingMachine){
       <div class="result">
         <span class="badge">BUYWISE DECISION ENGINE</span>
         <h1>Your Washing Machine Decision</h1>
-        <p>We matched your requirements against a small live-tested Australian product set.</p>
+        <p>We matched your requirements against a small Australian product set. Retailer prices are observed listings and may change.</p>
 
         <h3>Your requirements</h3>
         <p>
@@ -703,7 +731,7 @@ if(isWashingMachine){
                     </div>
                     <div style="display:flex;align-items:center;gap:10px">
                       <span class="retailer-price">$${offer.price.toLocaleString()}</span>
-                      <a class="retailer-button" href="${getRetailerUrl(offer)}" target="_blank" rel="noopener noreferrer">View retailer →</a>
+                      <a class="retailer-button" href="${getRetailerUrl(offer)}" data-retailer="${escapeHtml(offer.retailer)}" data-model="${escapeHtml(p.model)}" target="_blank" rel="noopener noreferrer">View retailer →</a>
                     </div>
                   </div>
                 `).join("") : `<p class="small">Retailer offers are being added for this model.</p>`}
@@ -736,12 +764,14 @@ if(isWashingMachine){
 </div>
               <p>${p.result.evidence} Evidence confidence</p>
     
-              <a href="${p.url}" target="_blank" rel="noopener noreferrer">
+              <a href="${getRetailerUrl(primaryRetailerOffer(p))}" data-retailer="${escapeHtml(primaryRetailerOffer(p).retailer)}" data-model="${escapeHtml(p.model)}" target="_blank" rel="noopener noreferrer">
                 <button class="primary" type="button">Check current price →</button>
               </a>
             </div>
           `).join("")}
         </div>
+
+        ${hasAffiliateLinks(ranked, retailerOffers) ? `<p class="small" style="margin-top:14px">BUYWISE may earn a commission if you buy through some of these links. This does not change the BUYWISE Fit score.</p>` : ""}
 
         <p class="small" style="margin-top:22px">
           Prices and availability can change. BUYWISE Fit is calculated independently of retailer relationships or affiliate commissions.
@@ -751,21 +781,32 @@ if(isWashingMachine){
       </div>
     `;
   }else{
+    const prioritiesText = priorities.length ? priorities.join(", ") : "Not specified";
+    const shoppingQuery = `${searchedProduct} Australia ${selectedBudget.label} ${prioritiesText}`;
+    const safeProduct = escapeHtml(searchedProduct);
+    const safePriorities = escapeHtml(prioritiesText);
+    const safeUsage = escapeHtml(usage);
+    const shoppingLinks = ["Google Shopping", "Bing Shopping"].map(engine => `
+      <a href="${buildShoppingUrl(engine, shoppingQuery)}" target="_blank" rel="noopener noreferrer">
+        <button class="primary" type="button">Search ${engine} →</button>
+      </a>
+    `).join("");
     document.getElementById("results").innerHTML = `
       <div class="result">
         <span class="badge">BUYWISE DECISION ENGINE</span>
-        <h1>We understand what you're looking for.</h1>
-        <p>BUYWISE has identified this as a <strong>${categoryName}</strong> purchase.</p>
+        <h1>Search live listings for ${safeProduct}</h1>
+        <p>BUYWISE can handle this search without adding a category manually. Its built-in product data does not cover this category yet, so no products or BUYWISE Fit scores are shown.</p>
         <h3>Your requirements</h3>
         <p>
-          <strong>Product:</strong> ${categoryName}<br>
-          <strong>Budget:</strong> $${budget.toLocaleString()}<br>
-          <strong>Priority:</strong> ${priorities.length ? priorities.join(", ") : "Not specified"}<br>
-          <strong>Usage:</strong> ${usage}
+          <strong>Product:</strong> ${safeProduct}<br>
+          <strong>Budget:</strong> ${escapeHtml(selectedBudget.label)}<br>
+          <strong>Priority:</strong> ${safePriorities}<br>
+          <strong>Usage:</strong> ${safeUsage}
         </p>
         <div class="card">
-          <h3>🔎 Next BUYWISE step</h3>
-          <p>Real product matching is currently connected for washing machines. More categories will be added one at a time.</p>
+          <h3>🔎 Search current listings</h3>
+          <p>These searches use your product, budget and priorities to find current listings. Prices and availability are provided by the search service and may change.</p>
+          <div class="options">${shoppingLinks}</div>
         </div>
       </div>
     `;
