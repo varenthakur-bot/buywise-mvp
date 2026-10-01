@@ -111,6 +111,36 @@ footer{text-align:center;color:#777;padding:45px 0 20px;font-size:13px}
 @media(max-width:700px){
   .retailer-row{align-items:flex-start;flex-wrap:wrap}
 }
+
+/* ---------------- UNIVERSAL LIVE SEARCH ---------------- */
+.live-search-panel{
+  margin-top:20px;padding:22px;border:1px solid #e5e5e5;
+  border-radius:18px;background:#fafafa
+}
+.live-search-status{
+  display:flex;align-items:center;gap:10px;font-weight:700;margin-bottom:10px
+}
+.live-dot{
+  width:10px;height:10px;border-radius:50%;background:#6d42ff;
+  display:inline-block
+}
+.live-search-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.live-search-actions a{text-decoration:none}
+.live-product-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:18px
+}
+.live-product{
+  background:white;border:1px solid #e5e5e5;border-radius:18px;padding:18px
+}
+.live-product h3{margin:0 0 8px;font-size:17px}
+.live-product .live-price{font-size:22px;font-weight:800;margin:10px 0}
+.live-product .live-meta{font-size:12px;color:#666;line-height:1.5}
+.live-product .live-fit{
+  display:inline-block;margin-top:10px;padding:6px 9px;border-radius:20px;
+  background:#f0ebff;font-size:12px;font-weight:800
+}
+@media(max-width:700px){.live-product-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 
@@ -491,6 +521,276 @@ function getCategoryName(search){
     if(pattern.test(s)) return name;
   }
   return search.trim();
+}
+
+
+
+/* ---------------- UNIVERSAL PRODUCT SEARCH ENGINE ---------------- */
+
+/*
+  BuyWise now has a provider-neutral live-search layer.
+  Set BUYWISE_SEARCH_API to your own server/API endpoint when ready.
+
+  Expected response:
+  {
+    "products":[
+      {
+        "name":"...",
+        "brand":"...",
+        "model":"...",
+        "rating":4.6,
+        "reviewCount":123,
+        "offers":[
+          {
+            "retailer":"Retailer A",
+            "price":599,
+            "currency":"AUD",
+            "url":"...",
+            "affiliateUrl":"...",
+            "shipping":"Free",
+            "availability":"In stock"
+          }
+        ]
+      }
+    ]
+  }
+
+  IMPORTANT: browser code should NOT contain a private API key.
+  The key belongs on the server/API endpoint.
+*/
+const BUYWISE_SEARCH_API =
+  window.BUYWISE_SEARCH_API ||
+  localStorage.getItem("BUYWISE_SEARCH_API") ||
+  "";
+
+function normaliseLiveOffer(o){
+  const price = Number(o.price);
+  return {
+    retailer: String(o.retailer || "Retailer"),
+    price: Number.isFinite(price) ? price : null,
+    currency: String(o.currency || "AUD"),
+    url: String(o.url || "#"),
+    affiliateUrl: String(o.affiliateUrl || ""),
+    shipping: o.shipping != null ? String(o.shipping) : "",
+    availability: o.availability != null ? String(o.availability) : ""
+  };
+}
+
+function normaliseLiveProduct(p){
+  const offers = Array.isArray(p.offers)
+    ? p.offers.map(normaliseLiveOffer)
+    : [];
+
+  if(!offers.length && p.retailer){
+    offers.push(normaliseLiveOffer(p));
+  }
+
+  return {
+    id: String(p.id || p.sku || p.model || p.name || ""),
+    name: String(p.name || "Unnamed product"),
+    brand: String(p.brand || ""),
+    model: String(p.model || ""),
+    rating: Number.isFinite(Number(p.rating)) ? Number(p.rating) : null,
+    reviewCount: Number.isFinite(Number(p.reviewCount)) ? Number(p.reviewCount) : null,
+    image: String(p.image || ""),
+    description: String(p.description || ""),
+    offers
+  };
+}
+
+function lowestOfferPrice(product){
+  const prices = product.offers
+    .map(o => o.price)
+    .filter(p => Number.isFinite(p));
+  return prices.length ? Math.min(...prices) : null;
+}
+
+function filterLiveProducts(products, budgetRange){
+  return products
+    .map(normaliseLiveProduct)
+    .map(p => ({
+      ...p,
+      offers: p.offers
+        .filter(o =>
+          Number.isFinite(o.price) &&
+          o.price >= budgetRange.min &&
+          o.price <= budgetRange.max
+        )
+        .sort((a,b)=>a.price-b.price)
+        .slice(0,10)
+    }))
+    .filter(p => p.offers.length > 0)
+    .sort((a,b)=>lowestOfferPrice(a)-lowestOfferPrice(b))
+    .slice(0,12);
+}
+
+function dedupeRetailerOffers(offers){
+  const seen = new Set();
+  return offers.filter(o => {
+    const key = `${o.retailer.toLowerCase()}|${o.url}`;
+    if(seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function liveSearchQuery(){
+  return `${searchedProduct} Australia`;
+}
+
+async function fetchLiveProducts(budgetRange){
+  if(!BUYWISE_SEARCH_API) return null;
+
+  const endpoint = new URL(BUYWISE_SEARCH_API, window.location.href);
+  endpoint.searchParams.set("q", liveSearchQuery());
+  endpoint.searchParams.set("minPrice", String(budgetRange.min));
+  endpoint.searchParams.set("maxPrice",
+    Number.isFinite(budgetRange.max) ? String(budgetRange.max) : "");
+
+  const response = await fetch(endpoint.toString(), {
+    method:"GET",
+    headers:{ "Accept":"application/json" }
+  });
+
+  if(!response.ok) throw new Error(`Search API returned ${response.status}`);
+
+  const data = await response.json();
+  return Array.isArray(data.products) ? data.products : [];
+}
+
+function renderLiveProducts(products, budgetRange){
+  if(!products.length){
+    return `
+      <div class="card">
+        <strong>No live products were returned inside ${escapeHtml(budgetRange.label)}.</strong>
+        <p class="small">Try another price range. BuyWise will not invent retailer offers.</p>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="live-product-grid">
+      ${products.slice(0,3).map((p,index)=>{
+        const offers = dedupeRetailerOffers(p.offers).slice(0,10);
+
+        return `
+          <div class="live-product">
+            <span class="badge">${index===0 ? "BUYWISE RESULT" : "ALTERNATIVE"}</span>
+            <h3>${escapeHtml(p.brand ? p.brand + " " + p.name : p.name)}</h3>
+            ${p.model ? `<div class="live-meta">Model: ${escapeHtml(p.model)}</div>` : ""}
+
+            <div class="live-price">
+              From $${Math.min(...offers.map(o=>o.price)).toLocaleString("en-AU",
+                {minimumFractionDigits:2,maximumFractionDigits:2})}
+            </div>
+
+            <div class="live-meta">
+              ${p.rating !== null ? `Rating: ${p.rating}/5` : "Rating: not available"}
+              ${p.reviewCount !== null ? ` · ${p.reviewCount.toLocaleString()} reviews` : ""}
+            </div>
+
+            <span class="live-fit">BuyWise product match</span>
+
+            <div class="retailer-box">
+              <h4>Where to buy — ${offers.length} retailer${offers.length===1?"":"s"}</h4>
+
+              ${offers.map((o,offerIndex)=>`
+                <div class="retailer-row">
+                  <div>
+                    <div class="retailer-name">
+                      ${escapeHtml(o.retailer)}
+                      ${offerIndex===0 ? " · lowest observed" : ""}
+                    </div>
+                    <div class="retailer-meta">
+                      ${o.shipping ? `Shipping: ${escapeHtml(o.shipping)} · ` : ""}
+                      ${o.availability ? escapeHtml(o.availability) : "Availability may change"}
+                    </div>
+                  </div>
+
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <span class="retailer-price">
+                      $${o.price.toLocaleString("en-AU",
+                        {minimumFractionDigits:2,maximumFractionDigits:2})}
+                    </span>
+                    <a class="retailer-button"
+                       href="${escapeHtml(o.affiliateUrl || o.url)}"
+                       target="_blank"
+                       rel="noopener noreferrer sponsored">
+                       ${o.affiliateUrl ? "Buy →" : "View →"}
+                    </a>
+                  </div>
+                </div>
+              `).join("")}
+
+              <p class="small" style="margin-bottom:0">
+                BuyWise may earn a commission from some retailer links.
+                Affiliate relationships do not affect the BuyWise Fit score.
+              </p>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+async function runUniversalLiveSearch(budgetRange){
+  const container = document.getElementById("liveSearchResults");
+  if(!container) return;
+
+  container.innerHTML = `
+    <div class="live-search-status">
+      <span class="live-dot"></span>
+      Searching current product listings…
+    </div>
+    <p class="small">Applying ${escapeHtml(budgetRange.label)} automatically.</p>
+  `;
+
+  try{
+    const raw = await fetchLiveProducts(budgetRange);
+
+    if(raw === null){
+      container.innerHTML = `
+        <div class="live-search-panel">
+          <div class="live-search-status">
+            <span class="live-dot"></span>
+            Live product connection is ready
+          </div>
+          <p class="small">
+            BuyWise is ready to connect to a product-search API. No private API
+            key is stored in this HTML file.
+          </p>
+        </div>
+      `;
+      return;
+    }
+
+    const products = filterLiveProducts(raw, budgetRange);
+
+    container.innerHTML = `
+      <div class="live-search-panel">
+        <div class="live-search-status">
+          <span class="live-dot"></span>
+          ${products.length
+            ? `Found ${products.length} products inside ${escapeHtml(budgetRange.label)}`
+            : `No products found inside ${escapeHtml(budgetRange.label)}`
+          }
+        </div>
+        ${renderLiveProducts(products, budgetRange)}
+      </div>
+    `;
+  }catch(error){
+    console.error("BUYWISE live search:", error);
+    container.innerHTML = `
+      <div class="card">
+        <strong>Live search could not be completed.</strong>
+        <p class="small">
+          The search connection is not configured or temporarily unavailable.
+          BuyWise has not invented product results.
+        </p>
+      </div>
+    `;
+  }
 }
 
 
@@ -881,6 +1181,8 @@ if(isWashingMachine){
           <strong>Priorities:</strong> ${safePriorities}<br>
           <strong>Usage:</strong> ${safeUsage}
         </p>
+
+        <div id="liveSearchResults"></div>
 
         <div class="card">
           <h3>🔎 Search current products</h3>
@@ -1841,5 +2143,33 @@ durabilityScore:85,
 })();
 </script>
   
+
+<!--
+  BUYWISE LIVE SEARCH CONNECTION
+  ------------------------------
+  Set before this file loads:
+      window.BUYWISE_SEARCH_API = "https://YOUR-SERVER.example.com/search";
+
+  The endpoint receives:
+      ?q=<product search>&minPrice=<number>&maxPrice=<number>
+
+  and returns:
+      {"products":[
+        {"name":"...", "brand":"...", "price":599,
+         "currency":"AUD", "retailer":"...", "url":"...",
+         "rating":4.6, "reviewCount":123}
+      ]}
+
+  Keep all private API keys on the server, never in this HTML file.
+-->
+
+<!--
+  BUYWISE RETAILER RULE:
+  Target: 5-10 genuine retailer offers per matching product.
+  Maximum displayed: 10.
+  If fewer than 5 genuine offers are available through connected data sources,
+  show only the offers actually found. Never fabricate missing retailers.
+  Affiliate commission never changes BUYWISE Fit.
+-->
 </body>
 </html>
