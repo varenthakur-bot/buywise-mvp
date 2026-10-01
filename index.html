@@ -431,6 +431,69 @@ function showHomeQuestion(){
 }
 
 
+
+/* ---------------- UNIVERSAL PRODUCT / PRICE HELPERS ---------------- */
+
+/*
+  BUYWISE price filtering rule:
+  - For products with retailer offers, use the LOWEST observed retailer price.
+  - Otherwise use the product reference price.
+  This prevents a product being excluded just because its stored reference
+  price is higher than a current retailer listing.
+*/
+function getLowestRetailerPrice(product){
+  try{
+    const offers = retailerOffers(product);
+    const prices = offers
+      .map(o => Number(o.price))
+      .filter(p => Number.isFinite(p) && p >= 0);
+    if(prices.length) return Math.min(...prices);
+  }catch(e){}
+  return Number(product.price);
+}
+
+function priceMatchesBudget(product, budgetRange){
+  const price = getLowestRetailerPrice(product);
+  return Number.isFinite(price) &&
+         price >= budgetRange.min &&
+         price <= budgetRange.max;
+}
+
+function buildLiveShoppingLinks(productQuery, budgetRange){
+  const budgetText = budgetRange.label;
+  const query = `${productQuery} Australia ${budgetText}`;
+  const encoded = encodeURIComponent(query);
+
+  return [
+    {
+      engine:"Google Shopping",
+      url:`https://www.google.com/search?tbm=shop&q=${encoded}`
+    },
+    {
+      engine:"Bing Shopping",
+      url:`https://www.bing.com/shop?q=${encoded}`
+    }
+  ];
+}
+
+function getCategoryName(search){
+  const s = search.toLowerCase().trim();
+  const aliases = [
+    [/washing machine|washer/, "Washing Machine"],
+    [/smart ?watch/, "Smartwatch"],
+    [/television|(^| )tv($| )/, "TV"],
+    [/vacuum/, "Vacuum Cleaner"],
+    [/laptop|notebook/, "Laptop"],
+    [/commercial blender|bar blender|blender/, "Commercial Blender"],
+    [/coffee machine|espresso machine/, "Coffee Machine"]
+  ];
+  for(const [pattern,name] of aliases){
+    if(pattern.test(s)) return name;
+  }
+  return search.trim();
+}
+
+
 /* ---------------- HOME RESULT ---------------- */
 
 function showHomeResult(){
@@ -679,8 +742,11 @@ if(isWashingMachine){
 
   if(isWashingMachine){
     const eligible = washingMachines.filter(
-      p => p.price >= selectedBudget.min && p.price <= selectedBudget.max
-    );
+      p => priceMatchesBudget(p, selectedBudget)
+    ).map(p => ({
+      ...p,
+      effectivePrice: getLowestRetailerPrice(p)
+    }));
     const ranked = eligible
       .map(p=>({...p, result:scoreWashingMachine(p)}))
       .sort((a,b)=>b.result.score-a.result.score)
@@ -692,7 +758,7 @@ if(isWashingMachine){
       <div class="result">
         <span class="badge">BUYWISE DECISION ENGINE</span>
         <h1>Your Washing Machine Decision</h1>
-        <p>We matched your requirements against a small Australian product set. Retailer prices are observed listings and may change.</p>
+        <p>We matched your requirements against a small Australian product set. Lowest observed retailer prices are used for budget filtering; prices and availability may change.</p>
 
         <h3>Your requirements</h3>
         <p>
@@ -716,7 +782,7 @@ if(isWashingMachine){
               <h3>${p.brand} ${p.model}</h3>
               <p>${p.name}</p>
               <div class="price">BUYWISE Fit: ${p.result.score}/100</div>
-              <p class="small"><strong>Reference price: $${p.price.toLocaleString()}</strong></p>
+              <p class="small"><strong>Lowest observed retailer price: $${p.effectivePrice.toLocaleString()}</strong></p>
              <p class="small">
   Product evidence from ${p.source} · ${p.rating}/5 from ${p.reviewCount} reviews<br>
   Retailer prices shown below are observed listings and may change.
@@ -773,6 +839,7 @@ if(isWashingMachine){
 
         ${hasAffiliateLinks(ranked, retailerOffers) ? `<p class="small" style="margin-top:14px">BUYWISE may earn a commission if you buy through some of these links. This does not change the BUYWISE Fit score.</p>` : ""}
 
+        <button type="button" onclick="restartBuyWise()" style="margin-top:18px">Start a new search</button>
         <p class="small" style="margin-top:22px">
           Prices and availability can change. BUYWISE Fit is calculated independently of retailer relationships or affiliate commissions.
           Retailer links currently use direct retailer pages; approved affiliate tracking will be connected retailer-by-retailer when available.
@@ -782,37 +849,78 @@ if(isWashingMachine){
     `;
   }else{
     const prioritiesText = priorities.length ? priorities.join(", ") : "Not specified";
-    const shoppingQuery = `${searchedProduct} Australia ${selectedBudget.label} ${prioritiesText}`;
-    const safeProduct = escapeHtml(searchedProduct);
-    const safePriorities = escapeHtml(prioritiesText);
-    const safeUsage = escapeHtml(usage);
-    const shoppingLinks = ["Google Shopping", "Bing Shopping"].map(engine => `
-      <a href="${buildShoppingUrl(engine, shoppingQuery)}" target="_blank" rel="noopener noreferrer">
-        <button class="primary" type="button">Search ${engine} →</button>
+    const categoryName = getCategoryName(searchedProduct);
+    const liveLinks = buildLiveShoppingLinks(searchedProduct, selectedBudget);
+
+    const shoppingLinks = liveLinks.map(item => `
+      <a href="${item.url}" target="_blank" rel="noopener noreferrer">
+        <button class="primary" type="button">Search ${item.engine} →</button>
       </a>
     `).join("");
+
+    const safeProduct = escapeHtml(searchedProduct);
+    const safeCategory = escapeHtml(categoryName);
+    const safePriorities = escapeHtml(prioritiesText);
+    const safeUsage = escapeHtml(usage);
+    const safeBudget = escapeHtml(selectedBudget.label);
+
     document.getElementById("results").innerHTML = `
       <div class="result">
-        <span class="badge">BUYWISE DECISION ENGINE</span>
-        <h1>Search live listings for ${safeProduct}</h1>
-        <p>BUYWISE can handle this search without adding a category manually. Its built-in product data does not cover this category yet, so no products or BUYWISE Fit scores are shown.</p>
+        <span class="badge">BUYWISE SEARCH</span>
+        <h1>Results for ${safeCategory}</h1>
+
+        <p>
+          BUYWISE has applied your selected price range automatically.
+          You do not need to create a category manually.
+        </p>
+
         <h3>Your requirements</h3>
         <p>
           <strong>Product:</strong> ${safeProduct}<br>
-          <strong>Budget:</strong> ${escapeHtml(selectedBudget.label)}<br>
-          <strong>Priority:</strong> ${safePriorities}<br>
+          <strong>Price range:</strong> ${safeBudget}<br>
+          <strong>Priorities:</strong> ${safePriorities}<br>
           <strong>Usage:</strong> ${safeUsage}
         </p>
+
         <div class="card">
-          <h3>🔎 Search current listings</h3>
-          <p>These searches use your product, budget and priorities to find current listings. Prices and availability are provided by the search service and may change.</p>
+          <h3>🔎 Search current products</h3>
+          <p>
+            This category is not yet in BUYWISE's built-in evidence database.
+            The links below search current Australian shopping listings using
+            your exact product and selected budget range.
+          </p>
           <div class="options">${shoppingLinks}</div>
+        </div>
+
+        <button type="button" onclick="restartBuyWise()" style="margin-top:18px">Start a new search</button>
+
+        <div class="card" style="margin-top:20px">
+          <h3>💡 What happens next?</h3>
+          <p class="small">
+            BUYWISE will continue to use its evidence-based Fit score for
+            categories with verified product data. For categories without
+            built-in evidence, BUYWISE will not invent a score or pretend
+            that a product has been verified.
+          </p>
         </div>
       </div>
     `;
   }
-
   document.getElementById("results").classList.remove("hidden");
+}
+
+
+
+function restartBuyWise(){
+  answers = {};
+  step = 0;
+  searchedProduct = "";
+  document.getElementById("results").classList.add("hidden");
+  document.getElementById("results").innerHTML = "";
+  document.getElementById("productSearch").value = "";
+  document.getElementById("home").classList.remove("hidden");
+  document.getElementById("searchSection").classList.add("hidden");
+  document.getElementById("questions").classList.add("hidden");
 }
 
 
