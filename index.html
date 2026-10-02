@@ -680,33 +680,60 @@ if(isWashingMachine){
       </div>
     `;
   }else{
-    document.getElementById("results").innerHTML = `
-      <div class="result">
-        <span class="badge">BUYWISE DECISION ENGINE</span>
-        <h1>We understand what you're looking for.</h1>
-        <p>BUYWISE has identified this as a <strong>${categoryName}</strong> purchase.</p>
-        <h3>Your requirements</h3>
-        <p>
-          <strong>Product:</strong> ${categoryName}<br>
-          <strong>Price range:</strong> ${selectedPriceRange ? selectedPriceRange.label : "Not specified"}<br>
-          <strong>Priority:</strong> ${priorities.length ? priorities.join(", ") : "Not specified"}<br>
-          <strong>Usage:</strong> ${usage}
-        </p>
-        <div class="card">
-          <h3>🔎 Next BUYWISE step</h3>
-          <p>Real product matching is currently connected for washing machines. More categories will be added one at a time.</p>
-        </div>
-      </div>
-    `;
+    try{
+      window.priorities=priorities||[];
+      const q=(document.getElementById("productSearch")?.value||categoryName||"").trim();
+      if(q && typeof bwRender === "function" && (isSmartwatch || isWashingMachine)){
+        bwRender(q);
+      }else{
+        document.getElementById("results").innerHTML = `
+          <div class="result">
+            <span class="badge">BUYWISE DECISION ENGINE</span>
+            <h1>We understand what you're looking for.</h1>
+            <p>BUYWISE has identified this as a <strong>${categoryName}</strong> purchase.</p>
+            <h3>Your requirements</h3>
+            <p>
+              <strong>Product:</strong> ${categoryName}<br>
+              <strong>Price range:</strong> ${selectedPriceRange ? selectedPriceRange.label : "Not specified"}<br>
+              <strong>Priority:</strong> ${priorities.length ? priorities.join(", ") : "Not specified"}<br>
+              <strong>Usage:</strong> ${usage}
+            </p>
+            <div class="card">
+              <h3>🔎 Next BUYWISE step</h3>
+              <p>Live product matching for this category is not connected yet.</p>
+            </div>
+          </div>
+        `;
+      }
+    }catch(e){
+      console.error("BUYWISE comparison error",e);
+    }
   }
 
-  try{ window.priorities=priorities||[]; const q=(document.getElementById("productSearch")?.value||categoryName||"").trim(); if(q) bwRender(q); }catch(e){console.warn(e)}
-
-document.getElementById("results").classList.remove("hidden");
+  document.getElementById("results").classList.remove("hidden");
 }
 
 
-\n/* ---------------- BUYWISE V2 COMPARISON ENGINE ---------------- */\nconst bwRetailers=[\n {retailer:"JB Hi-Fi",rating:4.6,reviews:1240,url:"https://www.jbhifi.com.au/"},\n {retailer:"The Good Guys",rating:4.5,reviews:980,url:"https://www.thegoodguys.com.au/"},\n {retailer:"Harvey Norman",rating:4.4,reviews:760,url:"https://www.harveynorman.com.au/"},\n {retailer:"Amazon Australia",rating:4.5,reviews:2100,url:"https://www.amazon.com.au/"},\n {retailer:"Officeworks",rating:4.3,reviews:410,url:"https://www.officeworks.com.au/"}\n];\nconst bwProducts=[\n {name:"Apple Watch SE",brand:"Apple",category:"smartwatch",base:349,reliability:88,usability:92,value:84,battery:76,warranty:80},\n {name:"Samsung Galaxy Watch FE",brand:"Samsung",category:"smartwatch",base:249,reliability:84,usability:87,value:91,battery:82,warranty:80},\n {name:"Garmin Venu Sq 2",brand:"Garmin",category:"smartwatch",base:399,reliability:91,usability:84,value:82,battery:94,warranty:80},\n {name:"LG 9kg Front Load Washing Machine",brand:"LG",category:"washing machine",base:899,reliability:89,usability:88,value:84,battery:70,warranty:86},\n {name:"Bosch 9kg Front Load Washing Machine",brand:"Bosch",category:"washing machine",base:999,reliability:92,usability:86,value:80,battery:72,warranty:90}\n];\nfunction bwNorm(q){q=(q||'').toLowerCase().trim();if(q.includes('watch'))return'smartwatch';if(q.includes('washer')||q.includes('washing'))return'washing machine';return q}\nfunction bwScore(p,priorities){let score=50,b=[];const m={reliability:p.reliability,usability:p.usability,value:p.value,battery:p.battery,warranty:p.warranty};const l={reliability:'Reliability',usability:'Ease of use',value:'Price / Value',battery:'Battery life',warranty:'Warranty'};(priorities||[]).slice(0,3).forEach(k=>{if(m[k]!=null){let pts=Math.round((m[k]-50)*.25);score+=pts;b.push(`${l[k]}: ${pts>=0?'+':''}${pts} — evidence score ${m[k]}/100`)}});return{score:Math.max(50,Math.min(100,score)),b}}\nfunction bwRender(q){const cat=bwNorm(q),range=selectedPriceRange,priorities=window.priorities||[];let ps=bwProducts.filter(p=>p.category===cat).map(p=>{let offers=bwRetailers.map((r,i)=>({...r,price:p.base+i*(p.base<500?10:25),stock:i<2?'In stock':'Check stock'})).filter(o=>!range||(o.price>=range.min&&o.price<=range.max)).sort((a,b)=>a.price-b.price).slice(0,10);return{...p,offers,result:bwScore(p,priorities)}}).filter(p=>p.offers.length).sort((a,b)=>b.result.score-a.result.score).slice(0,3);if(!ps.length){document.getElementById('results').innerHTML=`<div class="result"><span class="badge">BUYWISE SEARCH</span><h1>No retailer offer fits this budget</h1><p>BUYWISE found the product category, but no demonstration retailer offer is inside your selected price range.</p></div>`;return}document.getElementById('results').innerHTML=`<div class="result"><span class="badge">BUYWISE COMPARISON</span><h1>Results for ${q}</h1><p>Matched against your budget and selected priorities.</p><div class="bw-products">${ps.map((p,i)=>`<article class="bw-product"><div class="bw-product-head"><div><span class="bw-badge">${i===0?'BUYWISE MATCH':'ALTERNATIVE'}</span><h2>${p.name}</h2><p class="bw-meta">${p.brand} · demonstration product record</p></div><div class="bw-fit"><strong>${p.result.score}</strong><span>BUYWISE FIT / 100</span></div></div><div class="bw-reasons"><strong>Why this score?</strong><br>${p.result.b.length?p.result.b.map(x=>'• '+x).join('<br>'):'• Starting point: 50/100 — no priority adjustment selected.'}</div><strong>${p.offers.length} retailer offers</strong><table class="bw-offers"><thead><tr><th>Retailer</th><th>Price</th><th>Rating</th><th>Stock</th><th></th></tr></thead><tbody>${p.offers.map(o=>`<tr><td><strong>${o.retailer}</strong></td><td class="bw-price">$${o.price.toFixed(2)}</td><td>${o.rating}★ · ${o.reviews.toLocaleString()}</td><td>${o.stock}</td><td><a class="bw-offer-btn" href="${o.url}" target="_blank" rel="noopener noreferrer">View</a></td></tr>`).join('')}</tbody></table></article>`).join('')}</div><div class="bw-disclosure"><strong>Prototype data:</strong> these retailer offers are demonstration records. Live retailer prices, availability and affiliate links will be connected through permitted feeds. Affiliate commission will not affect BUYWISE Fit.</div></div>`}\n
+
+/* ---------------- BUYWISE V2 COMPARISON ENGINE ---------------- */
+const bwRetailers=[
+ {retailer:"JB Hi-Fi",rating:4.6,reviews:1240,url:"https://www.jbhifi.com.au/"},
+ {retailer:"The Good Guys",rating:4.5,reviews:980,url:"https://www.thegoodguys.com.au/"},
+ {retailer:"Harvey Norman",rating:4.4,reviews:760,url:"https://www.harveynorman.com.au/"},
+ {retailer:"Amazon Australia",rating:4.5,reviews:2100,url:"https://www.amazon.com.au/"},
+ {retailer:"Officeworks",rating:4.3,reviews:410,url:"https://www.officeworks.com.au/"}
+];
+const bwProducts=[
+ {name:"Apple Watch SE",brand:"Apple",category:"smartwatch",base:349,reliability:88,usability:92,value:84,battery:76,warranty:80},
+ {name:"Samsung Galaxy Watch FE",brand:"Samsung",category:"smartwatch",base:249,reliability:84,usability:87,value:91,battery:82,warranty:80},
+ {name:"Garmin Venu Sq 2",brand:"Garmin",category:"smartwatch",base:399,reliability:91,usability:84,value:82,battery:94,warranty:80},
+ {name:"LG 9kg Front Load Washing Machine",brand:"LG",category:"washing machine",base:899,reliability:89,usability:88,value:84,battery:70,warranty:86},
+ {name:"Bosch 9kg Front Load Washing Machine",brand:"Bosch",category:"washing machine",base:999,reliability:92,usability:86,value:80,battery:72,warranty:90}
+];
+function bwNorm(q){q=(q||'').toLowerCase().trim();if(q.includes('watch'))return'smartwatch';if(q.includes('washer')||q.includes('washing'))return'washing machine';return q}
+function bwScore(p,priorities){let score=50,b=[];const m={reliability:p.reliability,usability:p.usability,value:p.value,battery:p.battery,warranty:p.warranty};const l={reliability:'Reliability',usability:'Ease of use',value:'Price / Value',battery:'Battery life',warranty:'Warranty'};(priorities||[]).slice(0,3).forEach(k=>{if(m[k]!=null){let pts=Math.round((m[k]-50)*.25);score+=pts;b.push(`${l[k]}: ${pts>=0?'+':''}${pts} — evidence score ${m[k]}/100`)}});return{score:Math.max(50,Math.min(100,score)),b}}
+function bwRender(q){const cat=bwNorm(q),range=selectedPriceRange,priorities=window.priorities||[];let ps=bwProducts.filter(p=>p.category===cat).map(p=>{let offers=bwRetailers.map((r,i)=>({...r,price:p.base+i*(p.base<500?10:25),stock:i<2?'In stock':'Check stock'})).filter(o=>!range||(o.price>=range.min&&o.price<=range.max)).sort((a,b)=>a.price-b.price).slice(0,10);return{...p,offers,result:bwScore(p,priorities)}}).filter(p=>p.offers.length).sort((a,b)=>b.result.score-a.result.score).slice(0,3);if(!ps.length){document.getElementById('results').innerHTML=`<div class="result"><span class="badge">BUYWISE SEARCH</span><h1>No retailer offer fits this budget</h1><p>BUYWISE found the product category, but no demonstration retailer offer is inside your selected price range.</p></div>`;return}document.getElementById('results').innerHTML=`<div class="result"><span class="badge">BUYWISE COMPARISON</span><h1>Results for ${q}</h1><p>Matched against your budget and selected priorities.</p><div class="bw-products">${ps.map((p,i)=>`<article class="bw-product"><div class="bw-product-head"><div><span class="bw-badge">${i===0?'BUYWISE MATCH':'ALTERNATIVE'}</span><h2>${p.name}</h2><p class="bw-meta">${p.brand} · demonstration product record</p></div><div class="bw-fit"><strong>${p.result.score}</strong><span>BUYWISE FIT / 100</span></div></div><div class="bw-reasons"><strong>Why this score?</strong><br>${p.result.b.length?p.result.b.map(x=>'• '+x).join('<br>'):'• Starting point: 50/100 — no priority adjustment selected.'}</div><strong>${p.offers.length} retailer offers</strong><table class="bw-offers"><thead><tr><th>Retailer</th><th>Price</th><th>Rating</th><th>Stock</th><th></th></tr></thead><tbody>${p.offers.map(o=>`<tr><td><strong>${o.retailer}</strong></td><td class="bw-price">$${o.price.toFixed(2)}</td><td>${o.rating}★ · ${o.reviews.toLocaleString()}</td><td>${o.stock}</td><td><a class="bw-offer-btn" href="${o.url}" target="_blank" rel="noopener noreferrer">View</a></td></tr>`).join('')}</tbody></table></article>`).join('')}</div><div class="bw-disclosure"><strong>Prototype data:</strong> these retailer offers are demonstration records. Live retailer prices, availability and affiliate links will be connected through permitted feeds. Affiliate commission will not affect BUYWISE Fit.</div></div>`}
+
 /* ---------------- BUSINESS ---------------- */
 
 const businessQuestions=[
