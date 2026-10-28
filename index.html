@@ -393,7 +393,7 @@ function selectTravelType(type){
   form.innerHTML=`<h3>${type==="flights"?"✈️ Flight requirements":type==="hotels"?"🏨 Hotel requirements":"✈️ + 🏨 Trip requirements"}</h3><div class="travel-grid">${fields}</div><div class="travel-actions"><button class="primary" type="button" onclick="submitTravel()">Continue →</button></div><div class="travel-note">Travel comparison providers will be connected through verified partner/search sources. BuyWise will not invent prices or availability.</div>`;
 }
 
-async function submitTravel() {
+Searching available hotel listings
   const required = travelType === "flights" || travelType === "both"
     ? ["travelFrom", "travelTo", "travelDeparture", "travelReturn"]
     : ["hotelDestination", "hotelCheckIn", "hotelCheckOut"];
