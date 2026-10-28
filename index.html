@@ -393,14 +393,88 @@ function selectTravelType(type){
   form.innerHTML=`<h3>${type==="flights"?"✈️ Flight requirements":type==="hotels"?"🏨 Hotel requirements":"✈️ + 🏨 Trip requirements"}</h3><div class="travel-grid">${fields}</div><div class="travel-actions"><button class="primary" type="button" onclick="submitTravel()">Continue →</button></div><div class="travel-note">Travel comparison providers will be connected through verified partner/search sources. BuyWise will not invent prices or availability.</div>`;
 }
 
-function submitTravel(){
-  const required = travelType==="flights" || travelType==="both" ? ["travelFrom","travelTo","travelDeparture","travelReturn"] : ["hotelDestination","hotelCheckIn","hotelCheckOut"];
-  for(const id of required){ const el=document.getElementById(id); if(el && !el.value.trim()){ alert("Please complete the required trip details."); el.focus(); return; } }
+async function submitTravel() {
+  const required = travelType === "flights" || travelType === "both"
+    ? ["travelFrom", "travelTo", "travelDeparture", "travelReturn"]
+    : ["hotelDestination", "hotelCheckIn", "hotelCheckOut"];
+
+  for (const id of required) {
+    const el = document.getElementById(id);
+    if (!el || !el.value.trim()) {
+      alert("Please complete the required trip details.");
+      if (el) el.focus();
+      return;
+    }
+  }
+
   document.getElementById("travelSection").classList.add("hidden");
-  const results=document.getElementById("results");
+
+  const results = document.getElementById("results");
   results.classList.remove("hidden");
-  const title=travelType==="flights"?"Flight comparison":travelType==="hotels"?"Hotel comparison":"Flights + Hotels comparison";
-  results.innerHTML=`<div class="result"><span class="badge">BUYWISE TRAVEL</span><h1>${title}</h1><p>Your trip requirements are ready for provider comparison.</p><div class="card"><h3>🔎 Comparison engine</h3><p>BuyWise will only display verified provider offers when live travel data is connected. We will not show invented prices, availability or hotel/flight offers.</p><p><strong>Next connection:</strong> verified travel search/affiliate providers.</p></div><button class="back" style="margin-top:20px" onclick="backToServiceHome()">← Start another comparison</button></div>`;
+
+  const title = travelType === "flights"
+    ? "Flight comparison"
+    : travelType === "hotels"
+      ? "Hotel comparison"
+      : "Flights + Hotels comparison";
+
+  results.innerHTML = `
+    <div class="result">
+      <span class="badge">BUYWlSE TRAVEL</span>
+      <h1>${title}</h1>
+      <p>Searching available hotel listings...</p>
+      <div id="travelResults">Please wait.</div>
+    </div>`;
+
+  if (travelType !== "hotels") {
+    document.getElementById("travelResults").innerHTML =
+      `<p>Live flight comparison is not connected yet. No flight prices or availability are being displayed.</p>
+       <button class="back" onclick="backToServiceHome()">Start another comparison</button>`;
+    return;
+  }
+
+  const destination = document.getElementById("hotelDestination").value.trim();
+  const endpoint =
+    "https://buywise-api.acaiaffairvic.workers.dev/api/travel?type=hotels&destination=" +
+    encodeURIComponent(destination) + "&limit=20";
+
+  try {
+    const response = await fetch(endpoint);
+    if (!response.ok) throw new Error("Hotel API request failed.");
+
+    const data = await response.json();
+    const container = document.getElementById("travelResults");
+
+    if (!data.ok || !Array.isArray(data.results) || data.results.length === 0) {
+      container.innerHTML =
+        `<p>No hotel listings were found for "${destination}". Try another destination.</p>
+         <button class="back" onclick="backToServiceHome()">Start another comparison</button>`;
+      return;
+    }
+
+    container.innerHTML = `
+      <p><strong>${data.returned} listings shown</strong> for ${destination}.</p>
+      <p>Important: Prices, currency, dates and availability are not verified. Check the details on the provider's website before booking.</p>
+      <div class="cards">
+        ${data.results.map(h => `
+          <div class="card">
+            ${h.image ? `<img src="${h.image}" alt="" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px">` : ""}
+            <h2>${h.name || "Hotel"}</h2>
+            <p>${[h.city, h.region, h.address].filter(Boolean).join(", ")}</p>
+            ${h.rating ? `<p>Guest rating: ${h.rating}</p>` : ""}
+            ${h.stars && Number(h.stars) > 0 ? `<p>${h.stars} stars</p>` : ""}
+            <p>Price and availability: check with provider.</p>
+            ${h.hotelUrl ? `<a href="${h.hotelUrl}" target="_blank" rel="noopener noreferrer">View hotel</a>` : ""}
+            ${h.affiliateUrl ? `<p><a href="${h.affiliateUrl}" target="_blank" rel="noopener noreferrer">Check provider offer</a></p>` : ""}
+          </div>
+        `).join("")}
+      </div>
+      <button class="back" onclick="backToServiceHome()">Start another comparison</button>`;
+  } catch (error) {
+    document.getElementById("travelResults").innerHTML =
+      `<p>We couldn't load hotel listings just now. Please try again.</p>
+       <button class="back" onclick="backToServiceHome()">Start another comparison</button>`;
+  }
 }
 
 /* ---------------- HOME SEARCH ---------------- */
