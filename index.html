@@ -452,24 +452,97 @@ async function submitTravel() {
       return;
     }
 
+    window.buywiseHotelResults = data.results;
     container.innerHTML = `
-      <p><strong>${data.returned} listings shown</strong> for ${destination}.</p>
-      <p>Important: Prices, currency, dates and availability are not verified. Check the details on the provider's website before booking.</p>
-      <div class="cards">
-        ${data.results.map(h => `
-          <div class="card">
-            ${h.image ? `<img src="${h.image}" alt="" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px">` : ""}
-            <h2>${h.name || "Hotel"}</h2>
-            <p>${[h.city, h.region, h.address].filter(Boolean).join(", ")}</p>
-            ${h.rating ? `<p>Guest rating: ${h.rating}</p>` : ""}
-            ${h.stars && Number(h.stars) > 0 ? `<p>${h.stars} stars</p>` : ""}
-            <p>Price and availability: check with provider.</p>
-            ${h.hotelUrl ? `<a href="${h.hotelUrl}" target="_blank" rel="noopener noreferrer">View hotel</a>` : ""}
-            ${h.affiliateUrl ? `<p><a href="${h.affiliateUrl}" target="_blank" rel="noopener noreferrer">Check provider offer</a></p>` : ""}
-          </div>
-        `).join("")}
+      <p><strong>${data.returned || data.results.length} listings shown</strong> for ${destination}.</p>
+      <p>Important: Live prices, currency and availability are not verified for these listings. Price filters will only include hotels that provide a usable price.</p>
+      <div class="hotel-filter-panel" style="display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:18px 0;padding:16px;border:1px solid #e5e5e5;border-radius:14px;background:#fafafa">
+        <div style="min-width:130px;flex:1"><label for="hotelMinPrice"><strong>Min price (AUD/night)</strong></label><input id="hotelMinPrice" type="number" min="0" step="1" placeholder="No minimum" style="margin:8px 0 0;padding:12px;font-size:15px"></div>
+        <div style="min-width:130px;flex:1"><label for="hotelMaxPrice"><strong>Max price (AUD/night)</strong></label><input id="hotelMaxPrice" type="number" min="0" step="1" placeholder="No maximum" style="margin:8px 0 0;padding:12px;font-size:15px"></div>
+        <div style="min-width:150px;flex:1"><label for="hotelMinStars"><strong>Minimum stars</strong></label><select id="hotelMinStars" style="width:100%;margin-top:8px;padding:12px;border:2px solid #ddd;border-radius:12px;font-size:15px"><option value="0">Any rating</option><option value="3">3+ stars</option><option value="4">4+ stars</option><option value="5">5 stars</option></select></div>
+        <div style="min-width:170px;flex:1"><label for="hotelSort"><strong>Sort results</strong></label><select id="hotelSort" style="width:100%;margin-top:8px;padding:12px;border:2px solid #ddd;border-radius:12px;font-size:15px"><option value="relevance">Recommended order</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="stars-desc">Stars: high to low</option></select></div>
+        <button class="primary" type="button" onclick="applyHotelFilters()">Apply filters</button>
+        <button type="button" onclick="resetHotelFilters()">Reset</button>
       </div>
+      <p id="hotelFilterStatus" class="small" aria-live="polite"></p>
+      <div id="hotelCards" class="cards"></div>
       <button class="back" onclick="backToServiceHome()">Start another comparison</button>`;
+    renderHotelCards(data.results);
+    window.applyHotelFilters = function() {
+      const minRaw = document.getElementById("hotelMinPrice").value;
+      const maxRaw = document.getElementById("hotelMaxPrice").value;
+      const min = minRaw === "" ? null : Number(minRaw);
+      const max = maxRaw === "" ? null : Number(maxRaw);
+      const stars = Number(document.getElementById("hotelMinStars").value || 0);
+      const sort = document.getElementById("hotelSort").value;
+      let items = window.buywiseHotelResults.slice();
+      if (min !== null || max !== null) {
+        items = items.filter(h => {
+          const price = Number(h.price ?? h.pricePerNight ?? h.nightlyPrice);
+          if (!Number.isFinite(price) || price <= 0) return false;
+          return (min === null || price >= min) && (max === null || price <= max);
+        });
+      }
+      if (stars > 0) items = items.filter(h => Number(h.stars) >= stars);
+      if (sort === "price-asc" || sort === "price-desc") {
+        items.sort((a,b) => {
+          const ap = Number(a.price ?? a.pricePerNight ?? a.nightlyPrice);
+          const bp = Number(b.price ?? b.pricePerNight ?? b.nightlyPrice);
+          const av = Number.isFinite(ap) && ap > 0 ? ap : null;
+          const bv = Number.isFinite(bp) && bp > 0 ? bp : null;
+          if (av === null && bv === null) return 0;
+          if (av === null) return 1;
+          if (bv === null) return -1;
+          return sort === "price-asc" ? av-bv : bv-av;
+        });
+      } else if (sort === "stars-desc") {
+        items.sort((a,b) => (Number(b.stars)||0) - (Number(a.stars)||0));
+      }
+      const status = document.getElementById("hotelFilterStatus");
+      const hasPriceFilter = min !== null || max !== null;
+      const hasAnyPrices = window.buywiseHotelResults.some(h => {
+        const price = Number(h.price ?? h.pricePerNight ?? h.nightlyPrice);
+        return Number.isFinite(price) && price > 0;
+      });
+      if (hasPriceFilter && !hasAnyPrices) {
+        status.textContent = "Price filtering is unavailable because this feed does not currently provide verified nightly prices. Clear the price fields or check prices with the provider.";
+      } else {
+        status.textContent = `${items.length} of ${window.buywiseHotelResults.length} hotels match your filters. Prices and availability must be confirmed with the provider.`;
+      }
+      renderHotelCards(items);
+    };
+    window.resetHotelFilters = function() {
+      document.getElementById("hotelMinPrice").value = "";
+      document.getElementById("hotelMaxPrice").value = "";
+      document.getElementById("hotelMinStars").value = "0";
+      document.getElementById("hotelSort").value = "relevance";
+      document.getElementById("hotelFilterStatus").textContent = "";
+      renderHotelCards(window.buywiseHotelResults);
+    };
+    window.renderHotelCards = function(hotels) {
+      const cards = document.getElementById("hotelCards");
+      if (!hotels.length) {
+        cards.innerHTML = '<p>No hotels match these filters. Try changing the filters or resetting them.</p>';
+        return;
+      }
+      cards.innerHTML = hotels.map(h => {
+        const priceValue = Number(h.price ?? h.pricePerNight ?? h.nightlyPrice);
+        const hasPrice = Number.isFinite(priceValue) && priceValue > 0;
+        const safeUrl = url => { try { const u = new URL(url); return ["http:","https:"].includes(u.protocol) ? u.href : ""; } catch (_) { return ""; } };
+        const hotelUrl = safeUrl(h.hotelUrl);
+        const affiliateUrl = safeUrl(h.affiliateUrl);
+        return `<div class="card">
+          ${h.image ? `<img src="${h.image}" alt="" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px">` : ""}
+          <h2>${h.name || "Hotel"}</h2>
+          <p>${[h.city, h.region, h.address].filter(Boolean).join(", ")}</p>
+          ${h.rating ? `<p>Guest rating: ${h.rating}</p>` : ""}
+          ${h.stars && Number(h.stars) > 0 ? `<p>${h.stars} stars</p>` : ""}
+          <p>${hasPrice ? `Listed price: $${priceValue.toLocaleString("en-AU")} per night (confirm with provider)` : "Price: check with provider"}</p>
+          ${hotelUrl ? `<p><a href="${hotelUrl}" target="_blank" rel="noopener noreferrer">View hotel</a></p>` : ""}
+          ${affiliateUrl ? `<p><a href="${affiliateUrl}" target="_blank" rel="noopener noreferrer">Check provider offer</a></p>` : ""}
+        </div>`;
+      }).join("");
+    };
   } catch (error) {
     document.getElementById("travelResults").innerHTML =
       `<p>We couldn't load hotel listings just now. Please try again.</p>
