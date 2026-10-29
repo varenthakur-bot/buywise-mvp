@@ -467,7 +467,6 @@ async function submitTravel() {
       <p id="hotelFilterStatus" class="small" aria-live="polite"></p>
       <div id="hotelCards" class="cards"></div>
       <button class="back" onclick="backToServiceHome()">Start another comparison</button>`;
-    renderHotelCards(data.results);
     window.applyHotelFilters = function() {
       const minRaw = document.getElementById("hotelMinPrice").value;
       const maxRaw = document.getElementById("hotelMaxPrice").value;
@@ -543,6 +542,7 @@ async function submitTravel() {
         </div>`;
       }).join("");
     };
+    window.renderHotelCards(data.results);
   } catch (error) {
     document.getElementById("travelResults").innerHTML =
       `<p>We couldn't load hotel listings just now. Please try again.</p>
